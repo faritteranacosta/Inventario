@@ -1,0 +1,21 @@
+@Unimag.Inventario.Api_HostAddress = http://localhost:5082
+
+GET {{Unimag.Inventario.Api_HostAddress}}/api/samples
+Accept: application/json
+
+###
+
+POST {{Unimag.Inventario.Api_HostAddress}}/api/samples
+Content-Type: application/json
+
+{
+  "name": "First sample",
+  "description": "Created from the .http file"
+}
+
+###
+
+GET {{Unimag.Inventario.Api_HostAddress}}/api/samples/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###

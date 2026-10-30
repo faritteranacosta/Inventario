@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Unimag.Inventario.Api/Unimag.Inventario.Api.csproj" />
+    <Project Path="src/Unimag.Inventario.Application/Unimag.Inventario.Application.csproj" />
+    <Project Path="src/Unimag.Inventario.Domain/Unimag.Inventario.Domain.csproj" />
+    <Project Path="src/Unimag.Inventario.Infrastructure/Unimag.Inventario.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Unimag.Inventario.ArchitectureTests/Unimag.Inventario.ArchitectureTests.csproj" />
+    <Project Path="tests/Unimag.Inventario.UnitTests/Unimag.Inventario.UnitTests.csproj" />
+  </Folder>
+</Solution>
