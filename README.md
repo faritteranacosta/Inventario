@@ -1,4 +1,4 @@
-# Unimag.Inventario — Backend
+# Inventario — Backend
 
 API REST para un sistema de inventario SaaS (catálogo de productos, categorías, ventas, ingresos y gráficas), construida con **.NET 10** siguiendo **Clean Architecture + Arquitectura Hexagonal**.
 
