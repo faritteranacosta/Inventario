@@ -29,6 +29,14 @@ public sealed class User : BaseEntity
         if (string.IsNullOrWhiteSpace(email)) throw new UserEmailRequiredException();
         return new User(Guid.NewGuid(), tenantId, email.Trim().ToLowerInvariant(), passwordHash, role);
     }
+
+    public void ChangeEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) throw new UserEmailRequiredException();
+        Email = email.Trim().ToLowerInvariant();
+    }
+
+    public void ChangePassword(string passwordHash) => PasswordHash = passwordHash;
 }
 
 public sealed class UserEmailRequiredException : DomainException

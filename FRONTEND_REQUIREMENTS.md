@@ -81,35 +81,73 @@ El frontend debe contemplar estos flujos para `PlatformAdmin`:
 7. Seleccionar un negocio para operar sus pantallas, siempre que la política
    de auditoría lo permita.
 
-Estas acciones deben registrar quién las ejecutó, sobre qué negocio y cuándo.
-El frontend debe mostrar ese contexto en las confirmaciones y evitar acciones
-globales ambiguas.
+El frontend debe mostrar quién está ejecutando cada acción, sobre qué negocio
+y con qué rol. La auditoría detallada de esas acciones todavía no forma parte
+del contrato actual.
 
-### 3.2 Contrato de API necesario
+### 3.2 Contrato de API implementado
 
-La API actual no implementa todavía este modelo: solo define `UserRole.Admin`
-y `UserRole.User`, y el `User` actual tiene un único `tenantId`. Para soportar
-la administración global, el backend debe agregar primero un contrato
-equivalente a:
+La API implementa el modelo mediante `PlatformAdmin`, membresías y contexto
+activo. Las rutas de administración global requieren un JWT con el rol
+`PlatformAdmin`:
 
+- `POST /api/platform/bootstrap`: crear el primer `PlatformAdmin` una sola
+  vez; no requiere autenticación y queda bloqueado cuando ya existe uno.
 - `GET /api/platform/tenants`: listado global para `PlatformAdmin`.
 - `POST /api/platform/tenants`: crear negocio y, opcionalmente, su primer
   administrador.
 - `GET /api/platform/tenants/{tenantId}`: detalle, estado y resumen de acceso.
+- `PUT /api/platform/tenants/{tenantId}`: renombrar un negocio.
 - `PATCH /api/platform/tenants/{tenantId}/status`: suspender o reactivar.
+- `DELETE /api/platform/tenants/{tenantId}`: eliminar el negocio y sus
+  membresías, catálogo y ventas.
 - `GET /api/platform/tenants/{tenantId}/members`: listar membresías.
 - `POST /api/platform/tenants/{tenantId}/members`: invitar o crear una
   membresía.
 - `PATCH /api/platform/tenants/{tenantId}/members/{userId}`: cambiar rol o
   estado.
 - `DELETE /api/platform/tenants/{tenantId}/members/{userId}`: revocar acceso.
+- `GET /api/platform/audit`: consultar eventos de auditoría de plataforma.
 - `GET /api/auth/me`: devolver el usuario y todas sus membresías.
 - `POST /api/auth/context`: seleccionar un negocio autorizado.
+- `PUT /api/auth/me`: actualizar el correo del usuario autenticado.
+- `POST /api/auth/me/password`: cambiar la contraseña del usuario autenticado.
 
-Los nombres y payloads definitivos deben salir del OpenAPI vigente. Mientras
-estos endpoints no existan, el frontend no debe simularlos ni presentar
-acciones exitosas: debe marcar la capacidad como no disponible o restringirla
-al flujo actual.
+`POST /api/platform/tenants` acepta `{ "name": "...", "adminEmail": "...",
+"adminPassword": "..." }`. Los dos campos del administrador son opcionales,
+pero deben enviarse juntos cuando se quiera crear el primer administrador.
+
+`POST /api/platform/bootstrap` acepta
+`{ "email": "...", "password": "..." }`. Solo puede ejecutarse cuando no
+existe ningún `PlatformAdmin`; el frontend debe tratarlo como un flujo de
+configuración inicial y no mostrarlo como una operación repetible.
+
+`PUT /api/platform/tenants/{tenantId}` acepta `{ "name": "..." }`.
+
+`DELETE /api/platform/tenants/{tenantId}` es irreversible y elimina los datos
+del negocio, incluyendo membresías, categorías, productos y ventas. Debe
+requerir una confirmación explícita de alto impacto.
+
+`PATCH /api/platform/tenants/{tenantId}/status` acepta
+`{ "status": "Active" | "Suspended" }`.
+
+`POST /api/platform/tenants/{tenantId}/members` acepta
+`{ "email": "...", "password": "...", "role": "Admin" | "User" }`.
+
+`PATCH /api/platform/tenants/{tenantId}/members/{userId}` acepta
+`{ "role": "Admin" | "User", "status": "Active" | "Suspended" | "Revoked" }`;
+ambos campos son opcionales, pero debe enviarse al menos uno.
+
+`POST /api/auth/context` acepta `{ "tenantId": "guid" }` y devuelve un nuevo
+`token` junto con `activeTenantId`. El frontend debe reemplazar el token
+anterior por el nuevo antes de consultar el inventario del negocio.
+
+`PUT /api/auth/me` acepta `{ "email": "..." }`.
+`POST /api/auth/me/password` acepta `{ "currentPassword": "...",
+"newPassword": "..." }` y devuelve `204 No Content` cuando es correcto.
+
+El contrato completo y ejemplos de solicitudes están en
+[`platform.http`](src/Unimag.Inventario.Api/Platform/platform.http).
 
 ## 4. Reglas generales de sesión y seguridad
 
@@ -138,7 +176,8 @@ La respuesta contiene `token` y `user`. El frontend debe:
 - Guardar la sesión de forma segura según las capacidades del entorno.
 - Enviar `Authorization: Bearer <token>` en las solicitudes protegidas.
 - Conservar el usuario autenticado, su `id`, correo y rol.
-- Conservar sus membresías, el rol global si existe y el `tenantId` activo.
+- Consultar `GET /api/auth/me` después del login para conservar sus
+  membresías, el rol global y el `tenantId` activo.
 - Redirigir al dashboard después de iniciar sesión.
 - No guardar ni mostrar la contraseña.
 - Limpiar la sesión al cerrar sesión.
@@ -167,9 +206,10 @@ El frontend debe mantener un tenant activo para la sesión. Debe:
 - Evitar que el usuario crea que está viendo datos de otro tenant.
 - Recargar categorías, productos, ventas y dashboard cuando cambie el tenant.
 
-La API actual obtiene el tenant desde el contexto autenticado para las
+La API obtiene el tenant desde el claim `tenant_id` del JWT para las
 operaciones de inventario y ventas. El frontend no debe enviar un `tenantId`
-arbitrario como sustituto del contexto de sesión.
+arbitrario como sustituto del contexto de sesión: debe llamar a
+`POST /api/auth/context` y usar el token devuelto.
 
 ## 5. Páginas y módulos requeridos
 
@@ -470,10 +510,10 @@ adicional para `PlatformAdmin`:
 - Mostrar la diferencia entre el rol global y el rol dentro del negocio.
 - Ocultar o bloquear cada acción para usuarios sin permisos.
 
-La API actual no expone listado, edición, eliminación, membresías ni cambio de
-contraseña de usuarios. El frontend no debe simular esas acciones; deben
-quedar como funcionalidades futuras o mostrar una indicación de no
-disponible.
+La administración global de membresías sí está disponible mediante las rutas
+`/api/platform/tenants/{tenantId}/members`. La API todavía no expone un
+listado general de usuarios, edición del perfil, eliminación física de
+usuarios ni cambio de contraseña. El frontend no debe simular esas acciones.
 
 ## 5.10 Administración global de negocios
 
@@ -491,10 +531,8 @@ necesite administrar varios negocios:
 - Acceder al selector de negocio sin cambiar accidentalmente el rol global.
 
 La administración global de negocios no debe confundirse con el tenant activo
-de la sesión. La API actual solo ofrece operaciones básicas de tenants y no
-ofrece todavía un rol `PlatformAdmin`, estados, membresías, suspensión ni
-auditoría; el frontend debe marcar esas funciones como pendientes hasta que
-el contrato sea implementado.
+de la sesión. La API ofrece rol `PlatformAdmin`, estados, membresías,
+suspensión, selección de contexto, renombrado, eliminación y auditoría.
 
 ## 6. Contrato de datos que debe respetarse
 
@@ -509,9 +547,15 @@ El frontend debe modelar, como mínimo, estas respuestas:
 - Tenant: `id`, `name`, `createdAtUtc`.
 - Usuario: `id`, `tenantId`, `email`, `role`, `createdAtUtc`.
 - Login: `token`, `user`.
-- Membresía: `tenantId`, `tenantName`, `role`, `status`, `createdAtUtc`.
-- Sesión: `user`, `memberships`, `activeTenantId` y, si aplica,
-  `platformRole`.
+- Tenant administrable: `id`, `name`, `status`, `createdAtUtc`, `userCount`,
+  `adminCount`.
+- Membresía: `id`, `userId`, `tenantId`, `email`, `role`, `status`,
+  `createdAtUtc`.
+- Sesión (`GET /api/auth/me`): `id`, `email`, `platformRole`,
+  `activeTenantId`, `memberships`.
+- Cambio de contexto: `token`, `activeTenantId`.
+- Evento de auditoría: `id`, `actorUserId`, `action`, `resourceType`,
+  `resourceId`, `createdAtUtc`.
 
 Los campos opcionales pueden ser nulos. El frontend debe mostrar un valor
 neutro para descripciones o imágenes ausentes, sin enviar cadenas inválidas.
@@ -535,6 +579,8 @@ Mapeo mínimo de respuestas:
 - `401`: cerrar sesión y solicitar autenticación.
 - `404`: recurso inexistente; ofrecer regresar o actualizar.
 - `409`: conflicto, principalmente stock insuficiente o usuario duplicado.
+- `403`: rol insuficiente, membresía suspendida/revocada o negocio
+  suspendido; no repetir automáticamente la solicitud.
 - `500`: mostrar mensaje genérico y opción de reintentar; no mostrar
   información interna.
 
@@ -559,6 +605,11 @@ con el nombre del rol guardado en el usuario. La interfaz debe ocultar
 acciones no permitidas, pero nunca considerar el ocultamiento como seguridad:
 la API sigue siendo la autoridad final.
 
+Las rutas de catálogo, ventas y usuarios requieren autenticación. Crear,
+editar, eliminar o cargar imágenes de catálogo requiere `Admin` o
+`PlatformAdmin`; las consultas y el registro de ventas requieren un contexto
+de negocio válido.
+
 ## 9. Requisitos de usabilidad
 
 - Diseño adaptable a escritorio y dispositivos móviles.
@@ -578,11 +629,12 @@ El frontend debe diseñarse para evolucionar sin asumir que estas capacidades
 ya existen:
 
 - Paginación y ordenamiento del servidor no están definidos.
-- La administración de usuarios no incluye listado ni edición.
-- La actualización de tenants no está disponible.
-- El rol global `PlatformAdmin`, las membresías multi-negocio, la suspensión
-  de negocios, el cambio de contexto y la auditoría todavía no están
-  disponibles en la API vigente.
+- La administración de usuarios no incluye edición del perfil, eliminación
+  física ni cambio de contraseña.
+- El bootstrap de `PlatformAdmin` solo permite crear el primer administrador;
+  la promoción posterior de usuarios no está disponible en estos endpoints.
+- La auditoría registra las acciones de plataforma implementadas, pero aún no
+  incluye IP, user-agent ni cambios campo por campo.
 - El filtrado por tenant debe seguir el contexto autenticado actual.
 - La persistencia real y transacciones del backend pueden cambiar al pasar de
   almacenamiento en memoria a un proveedor definitivo.
@@ -601,6 +653,9 @@ Se considera que el frontend utiliza completamente la API cuando:
 - Un usuario puede crear o seleccionar un tenant, registrarse e iniciar sesión.
 - Un usuario con varias membresías puede cambiar de negocio y ver solo datos
   del contexto activo.
+- Un `PlatformAdmin` puede crear un negocio con su primer `Admin`, consultar
+  miembros, cambiar roles/estados, revocar membresías y suspender o reactivar
+  negocios.
 - Las solicitudes autenticadas envían el token correctamente.
 - Un administrador puede gestionar categorías y productos, incluidas sus
   imágenes.

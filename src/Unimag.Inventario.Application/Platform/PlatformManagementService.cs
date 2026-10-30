@@ -1,8 +1,10 @@
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Platform.Dtos;
+using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Contracts;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
+using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Users;
 using Unimag.Inventario.Domain.Users.Contracts;
 
@@ -15,19 +17,22 @@ public sealed class PlatformManagementService : IPlatformManagementService
     private readonly ITenantMembershipRepository _membershipRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
+    private readonly IPlatformAuditRepository _auditRepository;
 
     public PlatformManagementService(
         ITenantRepository tenantRepository,
         IUserRepository userRepository,
         ITenantMembershipRepository membershipRepository,
         IPasswordHasher passwordHasher,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IPlatformAuditRepository auditRepository)
     {
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
         _membershipRepository = membershipRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _auditRepository = auditRepository;
     }
 
     public async Task<IReadOnlyList<PlatformTenantResponse>> ListTenantsAsync(CancellationToken ct)
@@ -66,6 +71,7 @@ public sealed class PlatformManagementService : IPlatformManagementService
         }
 
         await _tenantRepository.SaveChangesAsync(ct);
+        await AuditAsync(command.ActorUserId, "TenantCreated", "Tenant", tenant.Id, ct);
         return await ToTenantResponseAsync(tenant, ct);
     }
 
@@ -74,7 +80,66 @@ public sealed class PlatformManagementService : IPlatformManagementService
         var tenant = await GetTenantOrThrowAsync(command.TenantId, ct);
         tenant.ChangeStatus(command.Status);
         await _tenantRepository.SaveChangesAsync(ct);
+        await AuditAsync(command.ActorUserId, "TenantStatusChanged", "Tenant", tenant.Id, ct);
         return await ToTenantResponseAsync(tenant, ct);
+    }
+
+    public async Task<UserResponse> BootstrapPlatformAdminAsync(BootstrapPlatformAdminCommand command, CancellationToken ct)
+    {
+        if (await _userRepository.ExistsPlatformAdminAsync(ct))
+            throw new PlatformAdminAlreadyExistsException();
+        if (await _userRepository.ExistsAsync(command.Email, ct))
+            throw new UserAlreadyExistsException(command.Email);
+
+        var user = User.Create(Guid.Empty, command.Email, _passwordHasher.Hash(command.Password), UserRole.PlatformAdmin);
+        await _userRepository.AddAsync(user, ct);
+        await _userRepository.SaveChangesAsync(ct);
+        await AuditAsync(user.Id, "PlatformAdminBootstrapped", "User", user.Id, ct);
+        return new UserResponse(user.Id, user.TenantId, user.Email, user.Role.ToString(), user.CreatedAtUtc);
+    }
+
+    public async Task<PlatformTenantResponse> UpdateTenantAsync(Guid actorUserId, UpdateTenantCommand command, CancellationToken ct)
+    {
+        var tenant = await GetTenantOrThrowAsync(command.TenantId, ct);
+        tenant.Rename(command.Name);
+        await _tenantRepository.SaveChangesAsync(ct);
+        await AuditAsync(actorUserId, "TenantRenamed", "Tenant", tenant.Id, ct);
+        return await ToTenantResponseAsync(tenant, ct);
+    }
+
+    public async Task DeleteTenantAsync(Guid actorUserId, Guid tenantId, CancellationToken ct)
+    {
+        await GetTenantOrThrowAsync(tenantId, ct);
+        await _tenantRepository.DeleteGraphAsync(tenantId, ct);
+        await AuditAsync(actorUserId, "TenantDeleted", "Tenant", tenantId, ct);
+        await _tenantRepository.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<AuditEventResponse>> ListAuditAsync(CancellationToken ct)
+        => (await _auditRepository.GetAllAsync(ct))
+            .Select(e => new AuditEventResponse(e.Id, e.ActorUserId, e.Action, e.ResourceType, e.ResourceId, e.CreatedAtUtc))
+            .ToList();
+
+    public async Task<UserResponse> UpdateProfileAsync(UpdateProfileCommand command, CancellationToken ct)
+    {
+        var user = await _userRepository.GetByIdAsync(command.UserId, ct)
+            ?? throw new UserNotFoundException(command.UserId);
+        if (!string.Equals(user.Email, command.Email, StringComparison.OrdinalIgnoreCase) &&
+            await _userRepository.ExistsAsync(command.Email, ct))
+            throw new UserAlreadyExistsException(command.Email);
+        user.ChangeEmail(command.Email);
+        await _userRepository.SaveChangesAsync(ct);
+        return new UserResponse(user.Id, user.TenantId, user.Email, user.Role.ToString(), user.CreatedAtUtc);
+    }
+
+    public async Task ChangePasswordAsync(ChangePasswordCommand command, CancellationToken ct)
+    {
+        var user = await _userRepository.GetByIdAsync(command.UserId, ct)
+            ?? throw new UserNotFoundException(command.UserId);
+        if (!_passwordHasher.Verify(command.CurrentPassword, user.PasswordHash))
+            throw new InvalidCredentialsException();
+        user.ChangePassword(_passwordHasher.Hash(command.NewPassword));
+        await _userRepository.SaveChangesAsync(ct);
     }
 
     public async Task<IReadOnlyList<MembershipResponse>> ListMembersAsync(Guid tenantId, CancellationToken ct)
@@ -107,6 +172,7 @@ public sealed class PlatformManagementService : IPlatformManagementService
         var membership = TenantMembership.Create(user.Id, command.TenantId, command.Role);
         await _membershipRepository.AddAsync(membership, ct);
         await _membershipRepository.SaveChangesAsync(ct);
+        await AuditAsync(command.ActorUserId, "MembershipCreated", "TenantMembership", membership.Id, ct);
         return await ToMembershipResponseAsync(membership, user.Email);
     }
 
@@ -122,18 +188,20 @@ public sealed class PlatformManagementService : IPlatformManagementService
             membership.ChangeStatus(command.Status.Value);
 
         await _membershipRepository.SaveChangesAsync(ct);
+        await AuditAsync(command.ActorUserId, "MembershipUpdated", "TenantMembership", membership.Id, ct);
         var user = await _userRepository.GetByIdAsync(command.UserId, ct)
             ?? throw new UserNotFoundException(command.UserId);
         return await ToMembershipResponseAsync(membership, user.Email);
     }
 
-    public async Task RevokeMemberAsync(Guid tenantId, Guid userId, CancellationToken ct)
+    public async Task RevokeMemberAsync(Guid actorUserId, Guid tenantId, Guid userId, CancellationToken ct)
     {
         await GetTenantOrThrowAsync(tenantId, ct);
         var membership = await _membershipRepository.GetAsync(userId, tenantId, ct)
             ?? throw new UserNotFoundException(userId);
         membership.ChangeStatus(MembershipStatus.Revoked);
         await _membershipRepository.SaveChangesAsync(ct);
+        await AuditAsync(actorUserId, "MembershipRevoked", "TenantMembership", membership.Id, ct);
     }
 
     public async Task<UserSessionResponse> GetCurrentUserAsync(Guid userId, CancellationToken ct)
@@ -159,6 +227,12 @@ public sealed class PlatformManagementService : IPlatformManagementService
 
     private async Task<Tenant> GetTenantOrThrowAsync(Guid id, CancellationToken ct)
         => await _tenantRepository.GetByIdAsync(id, ct) ?? throw new TenantNotFoundException(id);
+
+    private async Task AuditAsync(Guid actorUserId, string action, string resourceType, Guid? resourceId, CancellationToken ct)
+    {
+        await _auditRepository.AddAsync(PlatformAuditEvent.Create(actorUserId, action, resourceType, resourceId), ct);
+        await _auditRepository.SaveChangesAsync(ct);
+    }
 
     private async Task<PlatformTenantResponse> ToTenantResponseAsync(Tenant tenant, CancellationToken ct)
     {
@@ -190,4 +264,9 @@ public sealed class PlatformManagementService : IPlatformManagementService
         => Task.FromResult(new MembershipResponse(
             membership.Id, membership.UserId, membership.TenantId, email,
             membership.Role.ToString(), membership.Status.ToString(), membership.CreatedAtUtc));
+}
+
+public sealed class PlatformAdminAlreadyExistsException : DomainException
+{
+    public PlatformAdminAlreadyExistsException() : base("A platform administrator is already configured.") { }
 }

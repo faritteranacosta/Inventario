@@ -31,6 +31,18 @@ public sealed class TenantRepository : ITenantRepository
         return Task.CompletedTask;
     }
 
+    public async Task DeleteGraphAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        _db.TenantMemberships.RemoveRange(_db.TenantMemberships.Where(m => m.TenantId == tenantId));
+        _db.Categories.RemoveRange(_db.Categories.Where(c => c.TenantId == tenantId));
+        _db.Products.RemoveRange(_db.Products.Where(p => p.TenantId == tenantId));
+        _db.Sales.RemoveRange(_db.Sales.Where(s => s.TenantId == tenantId));
+        _db.Users.RemoveRange(_db.Users.Where(u => u.TenantId == tenantId));
+        var tenant = await _db.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, ct);
+        if (tenant is not null)
+            _db.Tenants.Remove(tenant);
+    }
+
     public async Task SaveChangesAsync(CancellationToken ct = default)
         => await _db.SaveChangesAsync(ct);
 }

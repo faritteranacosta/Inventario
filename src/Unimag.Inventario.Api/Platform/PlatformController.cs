@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Platform.Requests;
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Platform.Dtos;
+using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
 using Unimag.Inventario.Domain.Users;
@@ -22,18 +23,42 @@ public sealed class PlatformController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<PlatformTenantResponse>>> ListTenants(CancellationToken ct)
         => Ok(await _service.ListTenantsAsync(ct));
 
+    [HttpPost("bootstrap")]
+    [AllowAnonymous]
+    public async Task<ActionResult<UserResponse>> Bootstrap(
+        BootstrapPlatformAdminRequest request, CancellationToken ct)
+        => Ok(await _service.BootstrapPlatformAdminAsync(
+            new BootstrapPlatformAdminCommand(request.Email, request.Password), ct));
+
+    [HttpGet("audit")]
+    public async Task<ActionResult<IReadOnlyList<AuditEventResponse>>> Audit(CancellationToken ct)
+        => Ok(await _service.ListAuditAsync(ct));
+
     [HttpPost("tenants")]
     public async Task<ActionResult<PlatformTenantResponse>> CreateTenant(
         CreatePlatformTenantRequest request, CancellationToken ct)
     {
         var result = await _service.CreateTenantAsync(
-            new CreatePlatformTenantCommand(request.Name, request.AdminEmail, request.AdminPassword), ct);
+            new CreatePlatformTenantCommand(GetUserId(), request.Name, request.AdminEmail, request.AdminPassword), ct);
         return CreatedAtAction(nameof(GetTenant), new { tenantId = result.Id }, result);
     }
 
     [HttpGet("tenants/{tenantId:guid}")]
     public async Task<ActionResult<PlatformTenantDetailsResponse>> GetTenant(Guid tenantId, CancellationToken ct)
         => Ok(await _service.GetTenantAsync(tenantId, ct));
+
+    [HttpPut("tenants/{tenantId:guid}")]
+    public async Task<ActionResult<PlatformTenantResponse>> RenameTenant(
+        Guid tenantId, RenameTenantRequest request, CancellationToken ct)
+        => Ok(await _service.UpdateTenantAsync(GetUserId(),
+            new UpdateTenantCommand(tenantId, request.Name), ct));
+
+    [HttpDelete("tenants/{tenantId:guid}")]
+    public async Task<IActionResult> DeleteTenant(Guid tenantId, CancellationToken ct)
+    {
+        await _service.DeleteTenantAsync(GetUserId(), tenantId, ct);
+        return NoContent();
+    }
 
     [HttpPatch("tenants/{tenantId:guid}/status")]
     public async Task<ActionResult<PlatformTenantResponse>> UpdateTenantStatus(
@@ -42,7 +67,7 @@ public sealed class PlatformController : ControllerBase
         if (!Enum.TryParse<TenantStatus>(request.Status, true, out var status))
             throw new InvalidTenantStatusException(request.Status);
 
-        return Ok(await _service.UpdateTenantStatusAsync(new UpdateTenantStatusCommand(tenantId, status), ct));
+        return Ok(await _service.UpdateTenantStatusAsync(new UpdateTenantStatusCommand(GetUserId(), tenantId, status), ct));
     }
 
     [HttpGet("tenants/{tenantId:guid}/members")]
@@ -57,7 +82,7 @@ public sealed class PlatformController : ControllerBase
             throw new InvalidMembershipRoleException();
 
         var result = await _service.CreateMemberAsync(
-            new CreateMembershipCommand(tenantId, request.Email, request.Password, role), ct);
+            new CreateMembershipCommand(GetUserId(), tenantId, request.Email, request.Password, role), ct);
         return CreatedAtAction(nameof(ListMembers), new { tenantId }, result);
     }
 
@@ -81,14 +106,23 @@ public sealed class PlatformController : ControllerBase
         }
 
         return Ok(await _service.UpdateMemberAsync(
-            new UpdateMembershipCommand(tenantId, userId, role, status), ct));
+            new UpdateMembershipCommand(GetUserId(), tenantId, userId, role, status), ct));
     }
 
     [HttpDelete("tenants/{tenantId:guid}/members/{userId:guid}")]
     public async Task<IActionResult> RevokeMember(Guid tenantId, Guid userId, CancellationToken ct)
     {
-        await _service.RevokeMemberAsync(tenantId, userId, ct);
+        await _service.RevokeMemberAsync(GetUserId(), tenantId, userId, ct);
         return NoContent();
+    }
+
+    private Guid GetUserId()
+    {
+        var value = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(value, out var id)
+            ? id
+            : throw new InvalidOperationException("The authenticated user id is invalid.");
     }
 
 }
