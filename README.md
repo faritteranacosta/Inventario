@@ -36,17 +36,40 @@ dotnet restore
 dotnet run --project src/Unimag.Inventario.Api
 ```
 
-Por defecto la API queda en `https://localhost:7xxx` / `http://localhost:5xxx`. Base de datos InMemory (sin configuración).
+El comando anterior usa el perfil `http` y deja la API en
+`http://localhost:5082`. Base de datos InMemory (sin configuración).
+Para ejecutar también el endpoint HTTPS, usa:
+
+```bash
+dotnet run --project src/Unimag.Inventario.Api --launch-profile https
+```
+
+Ese perfil expone `https://localhost:7194` y `http://localhost:5082`.
 
 ## Documentación OpenAPI
 
 En desarrollo, el documento OpenAPI está disponible en:
 
 ```
-http://localhost:<puerto>/openapi/v1.json
+http://localhost:5082/openapi/v1.json
 ```
 
-Puedes importarlo en Swagger UI, Postman o cualquier cliente HTTP.
+Con el perfil `https`, usa `https://localhost:7194/openapi/v1.json`.
+Puedes pegar cualquiera de esas URLs en Swagger UI o importarla en Postman.
+
+## CORS
+
+En desarrollo, la API permite solicitudes desde el frontend Angular en
+`http://localhost:4200`. Si el frontend usa otro puerto u origen, agrega la
+URL exacta en `Cors:AllowedOrigins` dentro de
+`src/Unimag.Inventario.Api/appsettings.Development.json`. No incluyas una
+barra final ni uses `*` si la aplicación necesita enviar credenciales.
+
+Si usas la Swagger UI pública de `https://petstore.swagger.io`, ese origen ya
+está permitido en desarrollo. Debes iniciar la API con el perfil `https` y
+usar como definición:
+`https://localhost:7194/openapi/v1.json`. Para evitar depender de una UI
+externa, también puedes usar cualquier Swagger UI local.
 
 ## Autenticación
 

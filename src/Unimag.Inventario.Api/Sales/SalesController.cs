@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Sales.Mappers;
 using Unimag.Inventario.Api.Sales.Requests;
@@ -13,6 +14,7 @@ namespace Unimag.Inventario.Api.Sales;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class SalesController : ControllerBase
 {
     private readonly IUseCase<CreateSaleCommand, SaleResponse> _create;

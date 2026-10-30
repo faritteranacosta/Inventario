@@ -6,6 +6,7 @@ namespace Unimag.Inventario.Domain.Tenants;
 public sealed class Tenant : BaseEntity
 {
     public string Name { get; private set; } = string.Empty;
+    public TenantStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
 
     private Tenant() { }
@@ -14,6 +15,7 @@ public sealed class Tenant : BaseEntity
     {
         Id = id;
         Name = name;
+        Status = TenantStatus.Active;
         CreatedAtUtc = DateTime.UtcNow;
     }
 
@@ -28,4 +30,6 @@ public sealed class Tenant : BaseEntity
         if (string.IsNullOrWhiteSpace(name)) throw new TenantNameRequiredException();
         Name = name.Trim();
     }
+
+    public void ChangeStatus(TenantStatus status) => Status = status;
 }

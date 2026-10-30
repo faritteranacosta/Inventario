@@ -8,5 +8,8 @@ public interface IPasswordHasher
 
 public interface ITokenService
 {
-    string GenerateToken(Unimag.Inventario.Domain.Users.User user, Unimag.Inventario.Domain.Tenants.Tenant tenant);
+    string GenerateToken(
+        Unimag.Inventario.Domain.Users.User user,
+        Unimag.Inventario.Domain.Tenants.Tenant? tenant,
+        Unimag.Inventario.Domain.Users.UserRole? activeRole = null);
 }

@@ -18,6 +18,20 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var allowedCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins(allowedCorsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Each layer wires up its own dependencies via an extension method.
 // Api never new()s a repository, a DbContext or a use case directly.
 builder.Services.AddApplication();
@@ -55,10 +69,18 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// The HTTP development profile does not expose an HTTPS endpoint, so there is
+// no valid target for the redirection middleware in that case.
+if (!app.Environment.IsDevelopment() ||
+    app.Urls.Any(url => url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseCors("Frontend");
+
+    app.UseAuthentication();
+    app.UseAuthorization();
 
 app.MapControllers();
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Products.Mappers;
 using Unimag.Inventario.Api.Products.Requests;
@@ -16,6 +17,7 @@ namespace Unimag.Inventario.Api.Products;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class ProductsController : ControllerBase
 {
     private readonly IUseCase<CreateProductCommand, ProductResponse> _create;
@@ -48,6 +50,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<ProductResponse>> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
         var result = await _create.ExecuteAsync(ProductMapper.ToCreateCommand(_currentTenant.TenantId, request), cancellationToken);
@@ -69,6 +72,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<ProductResponse>> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
     {
         var result = await _update.ExecuteAsync(ProductMapper.ToUpdateCommand(id, request), cancellationToken);
@@ -76,6 +80,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _delete.ExecuteAsync(ProductMapper.ToDeleteCommand(id), cancellationToken);
@@ -83,6 +88,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/image")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<ProductResponse>> SetImage(Guid id, [FromBody] SetProductImageRequest request, CancellationToken cancellationToken)
     {
         var result = await _setImage.ExecuteAsync(ProductMapper.ToSetImageCommand(id, request), cancellationToken);
@@ -90,6 +96,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/image/upload")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<ProductResponse>> UploadImage(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Users.Dtos;
@@ -7,6 +8,7 @@ namespace Unimag.Inventario.Api.Users;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class UsersController : ControllerBase
 {
     private readonly IUseCase<GetUserByIdQuery, UserResponse> _getById;
