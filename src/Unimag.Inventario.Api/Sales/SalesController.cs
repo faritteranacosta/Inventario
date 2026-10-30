@@ -6,6 +6,7 @@ using Unimag.Inventario.Application.Sales.Commands.CreateSale;
 using Unimag.Inventario.Application.Sales.Dtos;
 using Unimag.Inventario.Application.Sales.Queries.GetSaleById;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Sales;
 
@@ -16,21 +17,24 @@ public sealed class SalesController : ControllerBase
     private readonly IUseCase<CreateSaleCommand, SaleResponse> _create;
     private readonly IUseCase<GetSaleByIdQuery, SaleResponse> _getById;
     private readonly IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>> _list;
+    private readonly ICurrentTenant _currentTenant;
 
     public SalesController(
         IUseCase<CreateSaleCommand, SaleResponse> create,
         IUseCase<GetSaleByIdQuery, SaleResponse> getById,
-        IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>> list)
+        IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>> list,
+        ICurrentTenant currentTenant)
     {
         _create = create;
         _getById = getById;
         _list = list;
+        _currentTenant = currentTenant;
     }
 
     [HttpPost]
     public async Task<ActionResult<SaleResponse>> Create([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
     {
-        var result = await _create.ExecuteAsync(SaleMapper.ToCreateCommand(request), cancellationToken);
+        var result = await _create.ExecuteAsync(SaleMapper.ToCreateCommand(_currentTenant.TenantId, request), cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

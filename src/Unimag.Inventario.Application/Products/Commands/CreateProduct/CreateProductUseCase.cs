@@ -16,7 +16,7 @@ public sealed class CreateProductUseCase : IUseCase<CreateProductCommand, Produc
 
     public async Task<ProductResponse> ExecuteAsync(CreateProductCommand input, CancellationToken cancellationToken = default)
     {
-        var product = Product.Create(input.Name, input.Description, input.Price, input.Stock, input.CategoryId, input.ImageUrl);
+        var product = Product.Create(input.TenantId, input.Name, input.Description, input.Price, input.Stock, input.CategoryId, input.ImageUrl);
         await _productRepository.AddAsync(product, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
 

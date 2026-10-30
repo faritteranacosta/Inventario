@@ -7,8 +7,8 @@ namespace Unimag.Inventario.Api.Sales.Mappers;
 
 public static class SaleMapper
 {
-    public static CreateSaleCommand ToCreateCommand(CreateSaleRequest request) =>
-        new(request.Items.Select(i => (i.ProductId, i.Quantity)).ToList());
+    public static CreateSaleCommand ToCreateCommand(Guid tenantId, CreateSaleRequest request) =>
+        new(tenantId, request.Items.Select(i => (i.ProductId, i.Quantity)).ToList());
 
     public static GetSaleByIdQuery ToGetQuery(Guid id) => new(id);
 

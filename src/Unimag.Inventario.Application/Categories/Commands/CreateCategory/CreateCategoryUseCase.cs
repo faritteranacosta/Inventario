@@ -16,7 +16,7 @@ public sealed class CreateCategoryUseCase : IUseCase<CreateCategoryCommand, Cate
 
     public async Task<CategoryResponse> ExecuteAsync(CreateCategoryCommand input, CancellationToken cancellationToken = default)
     {
-        var category = Category.Create(input.Name, input.Description);
+        var category = Category.Create(input.TenantId, input.Name, input.Description);
         await _categoryRepository.AddAsync(category, cancellationToken);
         await _categoryRepository.SaveChangesAsync(cancellationToken);
 

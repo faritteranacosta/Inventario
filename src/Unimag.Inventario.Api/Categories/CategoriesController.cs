@@ -8,6 +8,7 @@ using Unimag.Inventario.Application.Categories.Commands.DeleteCategory;
 using Unimag.Inventario.Application.Categories.Commands.UpdateCategory;
 using Unimag.Inventario.Application.Categories.Queries.GetCategoryById;
 using Unimag.Inventario.Application.Categories.Queries.ListCategories;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Categories;
 
@@ -20,25 +21,28 @@ public sealed class CategoriesController : ControllerBase
     private readonly IUseCase<DeleteCategoryCommand, bool> _deleteCategory;
     private readonly IUseCase<GetCategoryByIdQuery, CategoryResponse> _getCategoryById;
     private readonly IUseCase<ListCategoriesQuery, IReadOnlyList<CategoryResponse>> _listCategories;
+    private readonly ICurrentTenant _currentTenant;
 
     public CategoriesController(
         IUseCase<CreateCategoryCommand, CategoryResponse> createCategory,
         IUseCase<UpdateCategoryCommand, CategoryResponse> updateCategory,
         IUseCase<DeleteCategoryCommand, bool> deleteCategory,
         IUseCase<GetCategoryByIdQuery, CategoryResponse> getCategoryById,
-        IUseCase<ListCategoriesQuery, IReadOnlyList<CategoryResponse>> listCategories)
+        IUseCase<ListCategoriesQuery, IReadOnlyList<CategoryResponse>> listCategories,
+        ICurrentTenant currentTenant)
     {
         _createCategory = createCategory;
         _updateCategory = updateCategory;
         _deleteCategory = deleteCategory;
         _getCategoryById = getCategoryById;
         _listCategories = listCategories;
+        _currentTenant = currentTenant;
     }
 
     [HttpPost]
     public async Task<ActionResult<CategoryResponse>> Create([FromBody] CreateCategoryRequest request, CancellationToken cancellationToken)
     {
-        var command = CategoryMapper.ToCommand(request);
+        var command = CategoryMapper.ToCommand(_currentTenant.TenantId, request);
         var result = await _createCategory.ExecuteAsync(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
