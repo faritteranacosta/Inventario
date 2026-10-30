@@ -16,6 +16,7 @@ using Unimag.Inventario.Application.Products.Queries.ListProducts;
 using Unimag.Inventario.Application.Sales.Commands.CreateSale;
 using Unimag.Inventario.Application.Sales.Dtos;
 using Unimag.Inventario.Application.Sales.Queries.GetSaleById;
+using Unimag.Inventario.Application.Sales.Queries.GetSalesSummary;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
 using Unimag.Inventario.Application.Samples.Commands.CreateSample;
 using Unimag.Inventario.Application.Samples.Dtos;
@@ -51,6 +52,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUseCase<CreateSaleCommand, SaleResponse>, CreateSaleUseCase>();
         services.AddScoped<IUseCase<GetSaleByIdQuery, SaleResponse>, GetSaleByIdUseCase>();
+        services.AddScoped<IUseCase<GetSalesSummaryQuery, SalesSummaryResponse>, GetSalesSummaryUseCase>();
         services.AddScoped<IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>>, ListSalesUseCase>();
 
         return services;
