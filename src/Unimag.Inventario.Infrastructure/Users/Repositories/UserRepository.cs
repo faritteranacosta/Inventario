@@ -22,6 +22,9 @@ public sealed class UserRepository : IUserRepository
     public async Task<bool> ExistsAsync(string email, CancellationToken ct = default)
         => await _db.Users.AnyAsync(u => u.Email == email.ToLowerInvariant(), ct);
 
+    public async Task<bool> ExistsPlatformAdminAsync(CancellationToken ct = default)
+        => await _db.Users.AnyAsync(u => u.Role == UserRole.PlatformAdmin, ct);
+
     public async Task AddAsync(User user, CancellationToken ct = default)
         => await _db.Users.AddAsync(user, ct);
 

@@ -5,3 +5,5 @@ public sealed record UpdateTenantStatusRequest(string Status);
 public sealed record CreateMembershipRequest(string Email, string Password, string Role);
 public sealed record UpdateMembershipRequest(string? Role, string? Status);
 public sealed record SelectTenantContextRequest(Guid TenantId);
+public sealed record BootstrapPlatformAdminRequest(string Email, string Password);
+public sealed record RenameTenantRequest(string Name);

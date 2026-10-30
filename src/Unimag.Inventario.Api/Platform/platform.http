@@ -3,6 +3,15 @@
 @userId = 00000000-0000-0000-0000-000000000002
 @token = replace-with-platform-admin-token
 
+### Bootstrap the first platform administrator (one-time, no token)
+POST {{baseUrl}}/api/platform/bootstrap
+Content-Type: application/json
+
+{
+  "email": "platform-admin@example.com",
+  "password": "Cambiar-esta-clave-123!"
+}
+
 ### List all tenants
 GET {{baseUrl}}/api/platform/tenants
 Authorization: Bearer {{token}}
@@ -16,6 +25,15 @@ Content-Type: application/json
   "name": "Nuevo negocio",
   "adminEmail": "admin@nuevonegocio.com",
   "adminPassword": "Cambiar-esta-clave-123!"
+}
+
+### Rename a tenant
+PUT {{baseUrl}}/api/platform/tenants/{{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Negocio renombrado"
 }
 
 ### Get tenant details and members
@@ -60,6 +78,14 @@ Content-Type: application/json
 DELETE {{baseUrl}}/api/platform/tenants/{{tenantId}}/members/{{userId}}
 Authorization: Bearer {{token}}
 
+### Delete a tenant and its memberships, catalog and sales
+DELETE {{baseUrl}}/api/platform/tenants/{{tenantId}}
+Authorization: Bearer {{token}}
+
+### List platform audit events
+GET {{baseUrl}}/api/platform/audit
+Authorization: Bearer {{token}}
+
 ### Get current user and memberships
 GET {{baseUrl}}/api/auth/me
 Authorization: Bearer {{token}}
@@ -71,4 +97,23 @@ Content-Type: application/json
 
 {
   "tenantId": "{{tenantId}}"
+}
+
+### Update current profile
+PUT {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "new-email@example.com"
+}
+
+### Change current password
+POST {{baseUrl}}/api/auth/me/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "old-password",
+  "newPassword": "new-password-123!"
 }

@@ -68,6 +68,23 @@ public sealed class AuthController : ControllerBase
         return Ok(new { token, activeTenantId = request.TenantId });
     }
 
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<UserResponse>> UpdateProfile(
+        [FromBody] UpdateProfileRequest request, CancellationToken ct)
+        => Ok(await _platform.UpdateProfileAsync(
+            new UpdateProfileCommand(GetUserId(), request.Email), ct));
+
+    [Authorize]
+    [HttpPost("me/password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        await _platform.ChangePasswordAsync(
+            new ChangePasswordCommand(GetUserId(), request.CurrentPassword, request.NewPassword), ct);
+        return NoContent();
+    }
+
     private Guid GetUserId()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
