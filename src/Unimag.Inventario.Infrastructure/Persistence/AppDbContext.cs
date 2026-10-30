@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Unimag.Inventario.Domain.Categories;
 using Unimag.Inventario.Domain.Products;
 using Unimag.Inventario.Domain.Sales;
-using Unimag.Inventario.Domain.Samples;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Users;
 
@@ -18,8 +17,6 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
-
-    public DbSet<Sample> Samples => Set<Sample>();
 
     public DbSet<Category> Categories => Set<Category>();
 

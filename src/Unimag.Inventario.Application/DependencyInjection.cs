@@ -20,7 +20,6 @@ using Unimag.Inventario.Application.Auth.Commands.Login;
 using Unimag.Inventario.Application.Auth.Dtos;
 using Unimag.Inventario.Application.Sales.Queries.GetSalesSummary;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
-using Unimag.Inventario.Application.Samples.Commands.CreateSample;
 using Unimag.Inventario.Application.Tenants.Commands.CreateTenant;
 using Unimag.Inventario.Application.Tenants.Commands.DeleteTenant;
 using Unimag.Inventario.Application.Tenants.Dtos;
@@ -29,9 +28,6 @@ using Unimag.Inventario.Application.Tenants.Queries.ListTenants;
 using Unimag.Inventario.Application.Users.Commands.RegisterUser;
 using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Application.Users.Queries.GetUserById;
-using Unimag.Inventario.Application.Samples.Dtos;
-using Unimag.Inventario.Application.Samples.Queries.GetSampleById;
-using Unimag.Inventario.Application.Samples.Queries.ListSamples;
 
 namespace Unimag.Inventario.Application;
 
@@ -43,9 +39,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<IUseCase<CreateSampleCommand, SampleResponse>, CreateSampleUseCase>();
-        services.AddScoped<IUseCase<GetSampleByIdQuery, SampleResponse>, GetSampleByIdUseCase>();
-        services.AddScoped<IUseCase<ListSamplesQuery, IReadOnlyList<SampleResponse>>, ListSamplesUseCase>();
 
         services.AddScoped<IUseCase<CreateCategoryCommand, CategoryResponse>, CreateCategoryUseCase>();
         services.AddScoped<IUseCase<UpdateCategoryCommand, CategoryResponse>, UpdateCategoryUseCase>();

@@ -12,7 +12,7 @@ namespace Unimag.Inventario.ArchitectureTests;
 /// </summary>
 public class LayerDependencyTests
 {
-    private static readonly Assembly DomainAssembly = typeof(Unimag.Inventario.Domain.Samples.Sample).Assembly;
+    private static readonly Assembly DomainAssembly = typeof(Unimag.Inventario.Domain.Common.BaseEntity).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(Unimag.Inventario.Application.DependencyInjection).Assembly;
     private static readonly Assembly InfrastructureAssembly = typeof(Unimag.Inventario.Infrastructure.DependencyInjection).Assembly;
 
