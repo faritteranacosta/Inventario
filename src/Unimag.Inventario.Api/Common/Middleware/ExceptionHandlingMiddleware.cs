@@ -71,6 +71,8 @@ public sealed class ExceptionHandlingMiddleware
         UserNotFoundException => StatusCodes.Status404NotFound,
         UserAlreadyExistsException => StatusCodes.Status409Conflict,
         InvalidCredentialsException => StatusCodes.Status401Unauthorized,
+        TenantAccessDeniedException => StatusCodes.Status403Forbidden,
+        TenantSuspendedException => StatusCodes.Status403Forbidden,
         InsufficientStockException => StatusCodes.Status409Conflict,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError

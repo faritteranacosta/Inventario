@@ -2,7 +2,7 @@ using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Domain.Users;
 
-public enum UserRole { Admin = 0, User = 1 }
+public enum UserRole { Admin = 0, User = 1, PlatformAdmin = 2 }
 
 public sealed class User : BaseEntity
 {

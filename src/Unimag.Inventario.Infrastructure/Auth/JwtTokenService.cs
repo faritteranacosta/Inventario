@@ -14,20 +14,24 @@ public sealed class JwtTokenService : ITokenService
     private readonly IConfiguration _config;
     public JwtTokenService(IConfiguration config) => _config = config;
 
-    public string GenerateToken(User user, Tenant tenant)
+    public string GenerateToken(User user, Tenant? tenant, UserRole? activeRole = null)
     {
         var key = _config["Jwt:Key"] ?? "dev-secret-key-change-me-please-32chars!!";
         var issuer = _config["Jwt:Issuer"] ?? "Unimag.Inventario";
         var audience = _config["Jwt:Audience"] ?? "Unimag.Inventario";
 
-        var claims = new[]
+        var role = activeRole ?? user.Role;
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("tenant_id", tenant.Id.ToString()),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim(ClaimTypes.Role, role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        if (user.Role == UserRole.PlatformAdmin && role != UserRole.PlatformAdmin)
+            claims.Add(new Claim(ClaimTypes.Role, UserRole.PlatformAdmin.ToString()));
+        if (tenant is not null)
+            claims.Add(new Claim("tenant_id", tenant.Id.ToString()));
 
         var creds = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),

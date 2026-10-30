@@ -5,7 +5,6 @@ using Unimag.Inventario.Application.Categories.Commands.UpdateCategory;
 using Unimag.Inventario.Application.Categories.Dtos;
 using Unimag.Inventario.Application.Categories.Queries.GetCategoryById;
 using Unimag.Inventario.Application.Categories.Queries.ListCategories;
-using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Products.Commands.CreateProduct;
 using Unimag.Inventario.Application.Products.Commands.DeleteProduct;
 using Unimag.Inventario.Application.Products.Commands.SetProductImage;
@@ -28,6 +27,8 @@ using Unimag.Inventario.Application.Tenants.Queries.ListTenants;
 using Unimag.Inventario.Application.Users.Commands.RegisterUser;
 using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Application.Users.Queries.GetUserById;
+using Unimag.Inventario.Application.Platform;
+using Unimag.Inventario.Application.Common.Interfaces;
 
 namespace Unimag.Inventario.Application;
 
@@ -67,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<GetUserByIdQuery, UserResponse>, GetUserByIdUseCase>();
 
         services.AddScoped<IUseCase<LoginCommand, LoginResponse>, LoginUseCase>();
+        services.AddScoped<IPlatformManagementService, PlatformManagementService>();
 
         return services;
     }

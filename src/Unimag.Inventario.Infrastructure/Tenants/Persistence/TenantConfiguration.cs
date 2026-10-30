@@ -10,6 +10,7 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
     {
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Name).IsRequired().HasMaxLength(200);
+        builder.Property(t => t.Status).IsRequired();
         builder.Property(t => t.CreatedAtUtc).IsRequired();
     }
 }

@@ -1,0 +1,74 @@
+@baseUrl = http://localhost:5082
+@tenantId = 00000000-0000-0000-0000-000000000001
+@userId = 00000000-0000-0000-0000-000000000002
+@token = replace-with-platform-admin-token
+
+### List all tenants
+GET {{baseUrl}}/api/platform/tenants
+Authorization: Bearer {{token}}
+
+### Create a tenant with its first administrator
+POST {{baseUrl}}/api/platform/tenants
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Nuevo negocio",
+  "adminEmail": "admin@nuevonegocio.com",
+  "adminPassword": "Cambiar-esta-clave-123!"
+}
+
+### Get tenant details and members
+GET {{baseUrl}}/api/platform/tenants/{{tenantId}}
+Authorization: Bearer {{token}}
+
+### Suspend a tenant
+PATCH {{baseUrl}}/api/platform/tenants/{{tenantId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "Suspended"
+}
+
+### List tenant memberships
+GET {{baseUrl}}/api/platform/tenants/{{tenantId}}/members
+Authorization: Bearer {{token}}
+
+### Add a membership
+POST {{baseUrl}}/api/platform/tenants/{{tenantId}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "usuario@nuevonegocio.com",
+  "password": "Cambiar-esta-clave-123!",
+  "role": "User"
+}
+
+### Update membership role or status
+PATCH {{baseUrl}}/api/platform/tenants/{{tenantId}}/members/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role": "Admin",
+  "status": "Active"
+}
+
+### Revoke membership
+DELETE {{baseUrl}}/api/platform/tenants/{{tenantId}}/members/{{userId}}
+Authorization: Bearer {{token}}
+
+### Get current user and memberships
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Select an authorized tenant context
+POST {{baseUrl}}/api/auth/context
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}"
+}

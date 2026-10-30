@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Tenants.Mappers;
 using Unimag.Inventario.Api.Tenants.Requests;
@@ -36,6 +37,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "PlatformAdmin")]
     public async Task<ActionResult<IReadOnlyList<TenantResponse>>> List(CancellationToken ct)
     {
         var result = await _list.ExecuteAsync(new ListTenantsQuery(), ct);
@@ -43,6 +45,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "PlatformAdmin")]
     public async Task<ActionResult<TenantResponse>> GetById(Guid id, CancellationToken ct)
     {
         var result = await _getById.ExecuteAsync(new GetTenantByIdQuery(id), ct);
@@ -50,6 +53,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "PlatformAdmin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await _delete.ExecuteAsync(new DeleteTenantCommand(id), ct);

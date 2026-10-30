@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Categories.Mappers;
 using Unimag.Inventario.Api.Categories.Requests;
@@ -14,6 +15,7 @@ namespace Unimag.Inventario.Api.Categories;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class CategoriesController : ControllerBase
 {
     private readonly IUseCase<CreateCategoryCommand, CategoryResponse> _createCategory;
@@ -40,6 +42,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<CategoryResponse>> Create([FromBody] CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         var command = CategoryMapper.ToCommand(_currentTenant.TenantId, request);
@@ -62,6 +65,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<ActionResult<CategoryResponse>> Update(Guid id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
         var command = CategoryMapper.ToCommand(id, request);
@@ -70,6 +74,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin,PlatformAdmin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _deleteCategory.ExecuteAsync(CategoryMapper.ToDeleteCommand(id), cancellationToken);
