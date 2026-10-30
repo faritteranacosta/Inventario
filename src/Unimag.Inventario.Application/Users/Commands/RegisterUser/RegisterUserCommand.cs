@@ -1,0 +1,2 @@
+namespace Unimag.Inventario.Application.Users.Commands.RegisterUser;
+public sealed record RegisterUserCommand(Guid TenantId, string Email, string Password, Unimag.Inventario.Domain.Users.UserRole Role);
