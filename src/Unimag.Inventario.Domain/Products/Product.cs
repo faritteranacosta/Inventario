@@ -5,6 +5,8 @@ namespace Unimag.Inventario.Domain.Products;
 
 public sealed class Product : BaseEntity
 {
+    public Guid TenantId { get; private set; }
+
     public string Name { get; private set; } = string.Empty;
 
     public string? Description { get; private set; }
@@ -24,9 +26,10 @@ public sealed class Product : BaseEntity
         // Required by EF Core materialization.
     }
 
-    private Product(Guid id, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl)
+    private Product(Guid id, Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl)
     {
         Id = id;
+        TenantId = tenantId;
         Name = name;
         Description = description;
         Price = price;
@@ -36,7 +39,7 @@ public sealed class Product : BaseEntity
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    public static Product Create(string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl = null)
+    public static Product Create(Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -53,7 +56,7 @@ public sealed class Product : BaseEntity
             throw new InvalidPriceException();
         }
 
-        return new Product(Guid.NewGuid(), name.Trim(), description?.Trim(), price, stock, categoryId, imageUrl);
+        return new Product(Guid.NewGuid(), tenantId, name.Trim(), description?.Trim(), price, stock, categoryId, imageUrl);
     }
 
     public void UpdateDetails(string name, string? description, decimal price, int stock, Guid categoryId)

@@ -10,6 +10,8 @@ public sealed class SaleConfiguration : IEntityTypeConfiguration<Sale>
     {
         builder.HasKey(s => s.Id);
 
+        builder.Property(s => s.TenantId).IsRequired();
+
         builder.Property(s => s.SaleDateUtc).IsRequired();
 
         builder.OwnsMany(s => s.Items, item =>

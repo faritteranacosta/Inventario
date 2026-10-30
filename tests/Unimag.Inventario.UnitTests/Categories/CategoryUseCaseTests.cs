@@ -10,13 +10,15 @@ namespace Unimag.Inventario.UnitTests.Categories;
 
 public class CategoryUseCaseTests
 {
+    private readonly FakeCurrentTenant _tenant = new();
+
     [Fact]
     public async Task CreateCategory_ReturnsCreatedCategory()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var useCase = new CreateCategoryUseCase(repo);
 
-        var result = await useCase.ExecuteAsync(new CreateCategoryCommand("Bebidas", "Liquidos"), CancellationToken.None);
+        var result = await useCase.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "Bebidas", "Liquidos"), CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal("Bebidas", result.Name);
@@ -26,17 +28,17 @@ public class CategoryUseCaseTests
     [Fact]
     public async Task CreateCategory_WithEmptyName_Throws()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var useCase = new CreateCategoryUseCase(repo);
 
         await Assert.ThrowsAsync<CategoryNameRequiredException>(() =>
-            useCase.ExecuteAsync(new CreateCategoryCommand("   ", null), CancellationToken.None));
+            useCase.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "   ", null), CancellationToken.None));
     }
 
     [Fact]
     public async Task GetCategoryById_NotFound_Throws()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var useCase = new GetCategoryByIdUseCase(repo);
 
         await Assert.ThrowsAsync<CategoryNotFoundException>(() =>
@@ -46,9 +48,9 @@ public class CategoryUseCaseTests
     [Fact]
     public async Task UpdateCategory_Renames()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var create = new CreateCategoryUseCase(repo);
-        var created = await create.ExecuteAsync(new CreateCategoryCommand("Old", null), CancellationToken.None);
+        var created = await create.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "Old", null), CancellationToken.None);
 
         var update = new UpdateCategoryUseCase(repo);
         var updated = await update.ExecuteAsync(new UpdateCategoryCommand(created.Id, "New", "desc"), CancellationToken.None);
@@ -60,9 +62,9 @@ public class CategoryUseCaseTests
     [Fact]
     public async Task DeleteCategory_Removes()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var create = new CreateCategoryUseCase(repo);
-        var created = await create.ExecuteAsync(new CreateCategoryCommand("ToDelete", null), CancellationToken.None);
+        var created = await create.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "ToDelete", null), CancellationToken.None);
 
         var delete = new DeleteCategoryUseCase(repo);
         var ok = await delete.ExecuteAsync(new DeleteCategoryCommand(created.Id), CancellationToken.None);
@@ -76,10 +78,10 @@ public class CategoryUseCaseTests
     [Fact]
     public async Task ListCategories_ReturnsAll()
     {
-        var repo = new InMemoryCategoryRepository();
+        var repo = new InMemoryCategoryRepository(_tenant);
         var create = new CreateCategoryUseCase(repo);
-        await create.ExecuteAsync(new CreateCategoryCommand("A", null), CancellationToken.None);
-        await create.ExecuteAsync(new CreateCategoryCommand("B", null), CancellationToken.None);
+        await create.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "A", null), CancellationToken.None);
+        await create.ExecuteAsync(new CreateCategoryCommand(_tenant.TenantId, "B", null), CancellationToken.None);
 
         var list = new ListCategoriesUseCase(repo);
         var all = await list.ExecuteAsync(new ListCategoriesQuery(), CancellationToken.None);

@@ -11,24 +11,25 @@ namespace Unimag.Inventario.UnitTests.Sales;
 
 public class SaleUseCaseTests
 {
+    private readonly FakeCurrentTenant _tenant = new();
     private static readonly Guid CategoryId = Guid.NewGuid();
 
-    private static async Task<Guid> CreateProductAsync(InMemoryProductRepository repo, int stock = 10, decimal price = 2.5m)
+    private async Task<Guid> CreateProductAsync(InMemoryProductRepository repo, int stock = 10, decimal price = 2.5m)
     {
         var useCase = new CreateProductUseCase(repo);
-        var p = await useCase.ExecuteAsync(new CreateProductCommand("Prod", null, price, stock, CategoryId, null), CancellationToken.None);
+        var p = await useCase.ExecuteAsync(new CreateProductCommand(_tenant.TenantId, "Prod", null, price, stock, CategoryId, null), CancellationToken.None);
         return p.Id;
     }
 
     [Fact]
     public async Task CreateSale_DecrementsStockAndReturnsSale()
     {
-        var productRepo = new InMemoryProductRepository();
-        var saleRepo = new InMemorySaleRepository();
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
         var productId = await CreateProductAsync(productRepo, 10, 2.5m);
 
         var useCase = new CreateSaleUseCase(productRepo, saleRepo);
-        var result = await useCase.ExecuteAsync(new CreateSaleCommand(new[] { (productId, 3) }), CancellationToken.None);
+        var result = await useCase.ExecuteAsync(new CreateSaleCommand(_tenant.TenantId, new[] { (productId, 3) }), CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Single(result.Items);
@@ -44,41 +45,41 @@ public class SaleUseCaseTests
     [Fact]
     public async Task CreateSale_InsufficientStock_Throws()
     {
-        var productRepo = new InMemoryProductRepository();
-        var saleRepo = new InMemorySaleRepository();
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
         var productId = await CreateProductAsync(productRepo, 2, 2.5m);
 
         var useCase = new CreateSaleUseCase(productRepo, saleRepo);
         await Assert.ThrowsAsync<InsufficientStockException>(() =>
-            useCase.ExecuteAsync(new CreateSaleCommand(new[] { (productId, 5) }), CancellationToken.None));
+            useCase.ExecuteAsync(new CreateSaleCommand(_tenant.TenantId, new[] { (productId, 5) }), CancellationToken.None));
     }
 
     [Fact]
     public async Task CreateSale_EmptyItems_Throws()
     {
-        var productRepo = new InMemoryProductRepository();
-        var saleRepo = new InMemorySaleRepository();
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
 
         var useCase = new CreateSaleUseCase(productRepo, saleRepo);
         await Assert.ThrowsAsync<EmptySaleException>(() =>
-            useCase.ExecuteAsync(new CreateSaleCommand(Array.Empty<(Guid, int)>()), CancellationToken.None));
+            useCase.ExecuteAsync(new CreateSaleCommand(_tenant.TenantId, Array.Empty<(Guid, int)>()), CancellationToken.None));
     }
 
     [Fact]
     public async Task CreateSale_ProductNotFound_Throws()
     {
-        var productRepo = new InMemoryProductRepository();
-        var saleRepo = new InMemorySaleRepository();
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
 
         var useCase = new CreateSaleUseCase(productRepo, saleRepo);
         await Assert.ThrowsAsync<ProductNotFoundException>(() =>
-            useCase.ExecuteAsync(new CreateSaleCommand(new[] { (Guid.NewGuid(), 1) }), CancellationToken.None));
+            useCase.ExecuteAsync(new CreateSaleCommand(_tenant.TenantId, new[] { (Guid.NewGuid(), 1) }), CancellationToken.None));
     }
 
     [Fact]
     public async Task GetSaleById_NotFound_Throws()
     {
-        var saleRepo = new InMemorySaleRepository();
+        var saleRepo = new InMemorySaleRepository(_tenant);
         var useCase = new GetSaleByIdUseCase(saleRepo);
 
         await Assert.ThrowsAsync<SaleNotFoundException>(() =>
@@ -88,12 +89,12 @@ public class SaleUseCaseTests
     [Fact]
     public async Task ListSales_FiltersByDateRange()
     {
-        var productRepo = new InMemoryProductRepository();
-        var saleRepo = new InMemorySaleRepository();
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
         var productId = await CreateProductAsync(productRepo, 10, 1m);
 
         var useCase = new CreateSaleUseCase(productRepo, saleRepo);
-        await useCase.ExecuteAsync(new CreateSaleCommand(new[] { (productId, 1) }), CancellationToken.None);
+        await useCase.ExecuteAsync(new CreateSaleCommand(_tenant.TenantId, new[] { (productId, 1) }), CancellationToken.None);
 
         var list = new ListSalesUseCase(saleRepo);
         var now = DateTime.UtcNow;

@@ -38,7 +38,7 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
             saleItems.Add(new SaleItem(productId, quantity, product.Price));
         }
 
-        var sale = Sale.Create(saleItems);
+        var sale = Sale.Create(input.TenantId, saleItems);
         await _saleRepository.AddAsync(sale, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
         await _saleRepository.SaveChangesAsync(cancellationToken);

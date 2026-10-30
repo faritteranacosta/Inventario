@@ -1,10 +1,15 @@
 using Unimag.Inventario.Api.Common.Middleware;
+using Unimag.Inventario.Api.Common.Tenancy;
+using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Application;
 using Unimag.Inventario.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentTenant, CurrentTenant>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

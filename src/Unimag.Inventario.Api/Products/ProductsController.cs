@@ -9,6 +9,7 @@ using Unimag.Inventario.Application.Products.Commands.UpdateProduct;
 using Unimag.Inventario.Application.Products.Dtos;
 using Unimag.Inventario.Application.Products.Queries.GetProductById;
 using Unimag.Inventario.Application.Products.Queries.ListProducts;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Products;
 
@@ -22,6 +23,7 @@ public sealed class ProductsController : ControllerBase
     private readonly IUseCase<SetProductImageCommand, ProductResponse> _setImage;
     private readonly IUseCase<GetProductByIdQuery, ProductResponse> _getById;
     private readonly IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> _list;
+    private readonly ICurrentTenant _currentTenant;
 
     public ProductsController(
         IUseCase<CreateProductCommand, ProductResponse> create,
@@ -29,7 +31,8 @@ public sealed class ProductsController : ControllerBase
         IUseCase<DeleteProductCommand, bool> delete,
         IUseCase<SetProductImageCommand, ProductResponse> setImage,
         IUseCase<GetProductByIdQuery, ProductResponse> getById,
-        IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> list)
+        IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> list,
+        ICurrentTenant currentTenant)
     {
         _create = create;
         _update = update;
@@ -37,12 +40,13 @@ public sealed class ProductsController : ControllerBase
         _setImage = setImage;
         _getById = getById;
         _list = list;
+        _currentTenant = currentTenant;
     }
 
     [HttpPost]
     public async Task<ActionResult<ProductResponse>> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
-        var result = await _create.ExecuteAsync(ProductMapper.ToCreateCommand(request), cancellationToken);
+        var result = await _create.ExecuteAsync(ProductMapper.ToCreateCommand(_currentTenant.TenantId, request), cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

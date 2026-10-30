@@ -9,8 +9,8 @@ namespace Unimag.Inventario.Api.Categories.Mappers;
 
 public static class CategoryMapper
 {
-    public static CreateCategoryCommand ToCommand(CreateCategoryRequest request) =>
-        new(request.Name, request.Description);
+    public static CreateCategoryCommand ToCommand(Guid tenantId, CreateCategoryRequest request) =>
+        new(tenantId, request.Name, request.Description);
 
     public static UpdateCategoryCommand ToCommand(Guid id, UpdateCategoryRequest request) =>
         new(id, request.Name, request.Description);

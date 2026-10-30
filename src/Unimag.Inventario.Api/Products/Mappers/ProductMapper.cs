@@ -10,8 +10,8 @@ namespace Unimag.Inventario.Api.Products.Mappers;
 
 public static class ProductMapper
 {
-    public static CreateProductCommand ToCreateCommand(CreateProductRequest request) =>
-        new(request.Name, request.Description, request.Price, request.Stock, request.CategoryId, request.ImageUrl);
+    public static CreateProductCommand ToCreateCommand(Guid tenantId, CreateProductRequest request) =>
+        new(tenantId, request.Name, request.Description, request.Price, request.Stock, request.CategoryId, request.ImageUrl);
 
     public static UpdateProductCommand ToUpdateCommand(Guid id, UpdateProductRequest request) =>
         new(id, request.Name, request.Description, request.Price, request.Stock, request.CategoryId);

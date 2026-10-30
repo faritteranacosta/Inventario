@@ -10,6 +10,8 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
     {
         builder.HasKey(c => c.Id);
 
+        builder.Property(c => c.TenantId).IsRequired();
+
         builder.Property(c => c.Name)
             .IsRequired()
             .HasMaxLength(200);
