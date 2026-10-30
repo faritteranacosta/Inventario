@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Products.Mappers;
 using Unimag.Inventario.Api.Products.Requests;
+using Microsoft.AspNetCore.Http;
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Products.Commands.CreateProduct;
 using Unimag.Inventario.Application.Products.Commands.DeleteProduct;
@@ -24,6 +25,7 @@ public sealed class ProductsController : ControllerBase
     private readonly IUseCase<GetProductByIdQuery, ProductResponse> _getById;
     private readonly IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> _list;
     private readonly ICurrentTenant _currentTenant;
+    private readonly IFileStorage _fileStorage;
 
     public ProductsController(
         IUseCase<CreateProductCommand, ProductResponse> create,
@@ -32,7 +34,8 @@ public sealed class ProductsController : ControllerBase
         IUseCase<SetProductImageCommand, ProductResponse> setImage,
         IUseCase<GetProductByIdQuery, ProductResponse> getById,
         IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> list,
-        ICurrentTenant currentTenant)
+        ICurrentTenant currentTenant,
+        IFileStorage fileStorage)
     {
         _create = create;
         _update = update;
@@ -41,6 +44,7 @@ public sealed class ProductsController : ControllerBase
         _getById = getById;
         _list = list;
         _currentTenant = currentTenant;
+        _fileStorage = fileStorage;
     }
 
     [HttpPost]
@@ -82,6 +86,21 @@ public sealed class ProductsController : ControllerBase
     public async Task<ActionResult<ProductResponse>> SetImage(Guid id, [FromBody] SetProductImageRequest request, CancellationToken cancellationToken)
     {
         var result = await _setImage.ExecuteAsync(ProductMapper.ToSetImageCommand(id, request), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/image/upload")]
+    public async Task<ActionResult<ProductResponse>> UploadImage(Guid id, IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest("File is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var url = await _fileStorage.SaveAsync(stream, file.FileName, cancellationToken);
+
+        var result = await _setImage.ExecuteAsync(new SetProductImageCommand(id, url), cancellationToken);
         return Ok(result);
     }
 }

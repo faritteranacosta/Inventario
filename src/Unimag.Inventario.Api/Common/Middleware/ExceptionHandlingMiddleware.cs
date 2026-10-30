@@ -4,6 +4,9 @@ using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.Domain.Sales.Exceptions;
 using Unimag.Inventario.Domain.Samples.Exceptions;
+using Unimag.Inventario.Domain.Tenants;
+using Unimag.Inventario.Domain.Tenants.Exceptions;
+using Unimag.Inventario.Domain.Users;
 
 namespace Unimag.Inventario.Api.Common.Middleware;
 
@@ -66,6 +69,10 @@ public sealed class ExceptionHandlingMiddleware
         CategoryNotFoundException => StatusCodes.Status404NotFound,
         ProductNotFoundException => StatusCodes.Status404NotFound,
         SaleNotFoundException => StatusCodes.Status404NotFound,
+        TenantNotFoundException => StatusCodes.Status404NotFound,
+        UserNotFoundException => StatusCodes.Status404NotFound,
+        UserAlreadyExistsException => StatusCodes.Status409Conflict,
+        InvalidCredentialsException => StatusCodes.Status401Unauthorized,
         InsufficientStockException => StatusCodes.Status409Conflict,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError

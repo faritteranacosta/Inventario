@@ -3,6 +3,8 @@ using Unimag.Inventario.Domain.Categories;
 using Unimag.Inventario.Domain.Products;
 using Unimag.Inventario.Domain.Sales;
 using Unimag.Inventario.Domain.Samples;
+using Unimag.Inventario.Domain.Tenants;
+using Unimag.Inventario.Domain.Users;
 
 namespace Unimag.Inventario.Infrastructure.Persistence;
 
@@ -24,6 +26,10 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
 
     public DbSet<Sale> Sales => Set<Sale>();
+
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
