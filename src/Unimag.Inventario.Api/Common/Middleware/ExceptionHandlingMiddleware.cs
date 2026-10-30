@@ -3,7 +3,6 @@ using Unimag.Inventario.Domain.Categories.Exceptions;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.Domain.Sales.Exceptions;
-using Unimag.Inventario.Domain.Samples.Exceptions;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
 using Unimag.Inventario.Domain.Users;
@@ -65,7 +64,6 @@ public sealed class ExceptionHandlingMiddleware
     /// </summary>
     private static int MapToStatusCode(Exception exception) => exception switch
     {
-        SampleNotFoundException => StatusCodes.Status404NotFound,
         CategoryNotFoundException => StatusCodes.Status404NotFound,
         ProductNotFoundException => StatusCodes.Status404NotFound,
         SaleNotFoundException => StatusCodes.Status404NotFound,

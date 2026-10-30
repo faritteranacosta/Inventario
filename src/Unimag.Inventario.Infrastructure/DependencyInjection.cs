@@ -6,7 +6,6 @@ using Unimag.Inventario.Domain.Categories.Contracts;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Products.Contracts;
 using Unimag.Inventario.Domain.Sales.Contracts;
-using Unimag.Inventario.Domain.Samples.Contracts;
 using Unimag.Inventario.Domain.Tenants.Contracts;
 using Unimag.Inventario.Domain.Users.Contracts;
 using Unimag.Inventario.Infrastructure.Auth;
@@ -14,7 +13,6 @@ using Unimag.Inventario.Infrastructure.Categories.Repositories;
 using Unimag.Inventario.Infrastructure.Persistence;
 using Unimag.Inventario.Infrastructure.Products.Repositories;
 using Unimag.Inventario.Infrastructure.Sales.Repositories;
-using Unimag.Inventario.Infrastructure.Samples.Repositories;
 using Unimag.Inventario.Infrastructure.Storage;
 using Unimag.Inventario.Infrastructure.Tenants.Repositories;
 using Unimag.Inventario.Infrastructure.Users.Repositories;
@@ -34,7 +32,6 @@ public static class DependencyInjection
         // Swap this for UseSqlServer/UseNpgsql/etc. when wiring a real database.
         services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("InventarioDb"));
 
-        services.AddScoped<ISampleRepository, SampleRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
