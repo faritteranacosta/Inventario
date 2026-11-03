@@ -35,7 +35,7 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
             product.DecreaseStock(quantity);
             await _productRepository.UpdateAsync(product, cancellationToken);
 
-            saleItems.Add(new SaleItem(productId, quantity, product.Price));
+            saleItems.Add(new SaleItem(productId, product.Name, quantity, product.Price));
         }
 
         var sale = Sale.Create(input.TenantId, saleItems);
@@ -48,6 +48,6 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
 
     private static SaleResponse ToResponse(Sale sale) =>
         new(sale.Id, sale.SaleDateUtc,
-            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.Quantity, i.UnitPrice, i.Total)).ToList(),
+            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.Total)).ToList(),
             sale.Total);
 }

@@ -20,7 +20,7 @@ public sealed class GetSaleByIdUseCase : IUseCase<GetSaleByIdQuery, SaleResponse
             ?? throw new SaleNotFoundException(input.Id);
 
         return new SaleResponse(sale.Id, sale.SaleDateUtc,
-            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.Quantity, i.UnitPrice, i.Total)).ToList(),
+            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.Total)).ToList(),
             sale.Total);
     }
 }
