@@ -12,6 +12,13 @@ public interface ISaleRepository
 
     Task<IReadOnlyList<Sale>> GetByDateRangeAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<Sale> Items, int TotalItems)> GetPageAsync(
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(Sale sale, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

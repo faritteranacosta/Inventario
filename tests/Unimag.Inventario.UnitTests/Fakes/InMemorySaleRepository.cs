@@ -27,6 +27,20 @@ public sealed class InMemorySaleRepository : ISaleRepository
     public Task<IReadOnlyList<Sale>> GetByDateRangeAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Sale>>(_store.Values.Where(s => s.TenantId == _tenant.TenantId && s.SaleDateUtc >= fromUtc && s.SaleDateUtc <= toUtc).ToList());
 
+    public Task<(IReadOnlyList<Sale> Items, int TotalItems)> GetPageAsync(
+        DateTime? fromUtc, DateTime? toUtc, int skip, int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _store.Values.Where(s => s.TenantId == _tenant.TenantId);
+        if (fromUtc.HasValue)
+            query = query.Where(s => s.SaleDateUtc >= fromUtc.Value);
+        if (toUtc.HasValue)
+            query = query.Where(s => s.SaleDateUtc <= toUtc.Value);
+        var ordered = query.OrderByDescending(s => s.SaleDateUtc).ThenBy(s => s.Id).ToList();
+        return Task.FromResult<(IReadOnlyList<Sale>, int)>(
+            (ordered.Skip(skip).Take(take).ToList(), ordered.Count));
+    }
+
     public Task AddAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         _store[sale.Id] = sale;

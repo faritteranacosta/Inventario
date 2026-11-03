@@ -22,15 +22,13 @@ public sealed class ListPurchasesUseCase : IUseCase<ListPurchasesQuery, PagedRes
             throw new InvalidPaginationException();
         }
 
-        var purchases = await _repository.GetAllAsync(cancellationToken);
-        var totalItems = purchases.Count;
-        var items = purchases
-            .Skip((input.Page - 1) * input.PageSize)
-            .Take(input.PageSize)
+        var result = await _repository.GetPageAsync(
+            (input.Page - 1) * input.PageSize, input.PageSize, cancellationToken);
+        var items = result.Items
             .Select(CreatePurchaseUseCase.ToResponse)
             .ToList();
         return new PagedResponse<PurchaseResponse>(
-            items, input.Page, input.PageSize, totalItems,
-            (int)Math.Ceiling(totalItems / (double)input.PageSize));
+            items, input.Page, input.PageSize, result.TotalItems,
+            (int)Math.Ceiling(result.TotalItems / (double)input.PageSize));
     }
 }

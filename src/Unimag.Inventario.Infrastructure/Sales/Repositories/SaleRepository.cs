@@ -49,6 +49,28 @@ public sealed class SaleRepository : ISaleRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(IReadOnlyList<Sale> Items, int TotalItems)> GetPageAsync(
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Sales
+            .Include(s => s.Items)
+            .AsNoTracking()
+            .Where(s => s.TenantId == _currentTenant.TenantId);
+        if (fromUtc.HasValue)
+            query = query.Where(s => s.SaleDateUtc >= fromUtc.Value);
+        if (toUtc.HasValue)
+            query = query.Where(s => s.SaleDateUtc <= toUtc.Value);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderByDescending(s => s.SaleDateUtc).ThenBy(s => s.Id)
+            .Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public async Task AddAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         await _dbContext.Sales.AddAsync(sale, cancellationToken);

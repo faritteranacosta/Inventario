@@ -27,6 +27,17 @@ public sealed class PurchaseRepository : IPurchaseRepository
             .OrderByDescending(p => p.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
+    public async Task<(IReadOnlyList<Purchase> Items, int TotalItems)> GetPageAsync(
+        int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Purchases.Include(p => p.Items).AsNoTracking()
+            .Where(p => p.TenantId == _currentTenant.TenantId);
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderByDescending(p => p.CreatedAtUtc).ThenBy(p => p.Id)
+            .Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public Task AddAsync(Purchase purchase, CancellationToken cancellationToken = default) =>
         _dbContext.Purchases.AddAsync(purchase, cancellationToken).AsTask();
 
