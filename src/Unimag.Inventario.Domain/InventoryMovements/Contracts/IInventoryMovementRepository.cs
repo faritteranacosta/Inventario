@@ -13,6 +13,15 @@ public interface IInventoryMovementRepository
         DateTime? toUtc,
         CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<InventoryMovement> Items, int TotalItems)> GetPageAsync(
+        Guid? productId,
+        InventoryMovementType? type,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(InventoryMovement movement, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

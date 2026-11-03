@@ -26,18 +26,15 @@ public sealed class ListInventoryMovementsUseCase
             throw new InvalidPaginationException();
         }
 
-        var movements = await _repository.GetAllAsync(
-            input.ProductId, input.Type, input.FromUtc, input.ToUtc, cancellationToken);
-
-        var totalItems = movements.Count;
-        var items = movements
-            .Skip((input.Page - 1) * input.PageSize)
-            .Take(input.PageSize)
+        var result = await _repository.GetPageAsync(
+            input.ProductId, input.Type, input.FromUtc, input.ToUtc,
+            (input.Page - 1) * input.PageSize, input.PageSize, cancellationToken);
+        var items = result.Items
             .Select(ToResponse)
             .ToList();
         return new PagedResponse<InventoryMovementResponse>(
-            items, input.Page, input.PageSize, totalItems,
-            (int)Math.Ceiling(totalItems / (double)input.PageSize));
+            items, input.Page, input.PageSize, result.TotalItems,
+            (int)Math.Ceiling(result.TotalItems / (double)input.PageSize));
     }
 
     private static InventoryMovementResponse ToResponse(InventoryMovement movement) =>

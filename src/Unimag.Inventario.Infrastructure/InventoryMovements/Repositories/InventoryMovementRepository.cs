@@ -57,6 +57,32 @@ public sealed class InventoryMovementRepository : IInventoryMovementRepository
     public Task AddAsync(InventoryMovement movement, CancellationToken cancellationToken = default) =>
         _dbContext.InventoryMovements.AddAsync(movement, cancellationToken).AsTask();
 
+    public async Task<(IReadOnlyList<InventoryMovement> Items, int TotalItems)> GetPageAsync(
+        Guid? productId,
+        InventoryMovementType? type,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.InventoryMovements.AsNoTracking()
+            .Where(m => m.TenantId == _currentTenant.TenantId);
+        if (productId.HasValue)
+            query = query.Where(m => m.ProductId == productId.Value);
+        if (type.HasValue)
+            query = query.Where(m => m.Type == type.Value);
+        if (fromUtc.HasValue)
+            query = query.Where(m => m.CreatedAtUtc >= fromUtc.Value);
+        if (toUtc.HasValue)
+            query = query.Where(m => m.CreatedAtUtc <= toUtc.Value);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderByDescending(m => m.CreatedAtUtc).ThenByDescending(m => m.Id)
+            .Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _dbContext.SaveChangesAsync(cancellationToken);
 }
