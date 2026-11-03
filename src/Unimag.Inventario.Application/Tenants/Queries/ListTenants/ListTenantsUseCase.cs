@@ -12,6 +12,6 @@ public sealed class ListTenantsUseCase : IUseCase<ListTenantsQuery, IReadOnlyLis
     public async Task<IReadOnlyList<TenantResponse>> ExecuteAsync(ListTenantsQuery input, CancellationToken ct = default)
     {
         var tenants = await _repo.GetAllAsync(ct);
-        return tenants.Select(t => new TenantResponse(t.Id, t.Name, t.CreatedAtUtc)).ToList();
+        return tenants.Select(t => new TenantResponse(t.Id, t.Name, t.DisplayName, t.LogoUrl, t.CreatedAtUtc)).ToList();
     }
 }

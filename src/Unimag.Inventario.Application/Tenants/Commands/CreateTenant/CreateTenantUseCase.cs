@@ -15,6 +15,6 @@ public sealed class CreateTenantUseCase : IUseCase<CreateTenantCommand, TenantRe
         var tenant = Tenant.Create(input.Name);
         await _repo.AddAsync(tenant, ct);
         await _repo.SaveChangesAsync(ct);
-        return new TenantResponse(tenant.Id, tenant.Name, tenant.CreatedAtUtc);
+        return new TenantResponse(tenant.Id, tenant.Name, tenant.DisplayName, tenant.LogoUrl, tenant.CreatedAtUtc);
     }
 }

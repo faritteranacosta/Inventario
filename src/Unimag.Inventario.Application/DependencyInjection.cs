@@ -21,6 +21,7 @@ using Unimag.Inventario.Application.Sales.Queries.GetSalesSummary;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
 using Unimag.Inventario.Application.Tenants.Commands.CreateTenant;
 using Unimag.Inventario.Application.Tenants.Commands.DeleteTenant;
+using Unimag.Inventario.Application.Tenants.Commands.UpdateTenantBranding;
 using Unimag.Inventario.Application.Tenants.Dtos;
 using Unimag.Inventario.Application.Tenants.Queries.GetTenantById;
 using Unimag.Inventario.Application.Tenants.Queries.ListTenants;
@@ -60,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>>, ListSalesUseCase>();
 
         services.AddScoped<IUseCase<CreateTenantCommand, TenantResponse>, CreateTenantUseCase>();
+        services.AddScoped<IUseCase<UpdateTenantBrandingCommand, TenantResponse>, UpdateTenantBrandingUseCase>();
         services.AddScoped<IUseCase<DeleteTenantCommand, bool>, DeleteTenantUseCase>();
         services.AddScoped<IUseCase<GetTenantByIdQuery, TenantResponse>, GetTenantByIdUseCase>();
         services.AddScoped<IUseCase<ListTenantsQuery, IReadOnlyList<TenantResponse>>, ListTenantsUseCase>();

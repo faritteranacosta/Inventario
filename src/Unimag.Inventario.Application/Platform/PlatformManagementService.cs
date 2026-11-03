@@ -208,7 +208,16 @@ public sealed class PlatformManagementService : IPlatformManagementService
     {
         var user = await _userRepository.GetByIdAsync(userId, ct) ?? throw new UserNotFoundException(userId);
         var memberships = await ToMembershipResponsesAsync(await _membershipRepository.GetByUserIdAsync(userId, ct), ct);
-        return new UserSessionResponse(user.Id, user.Email, user.Role.ToString(), null, memberships);
+        var activeMembership = memberships.FirstOrDefault(m => m.Status == "Active");
+        string? activeTenantName = null;
+        string? activeTenantLogoUrl = null;
+        if (activeMembership is not null)
+        {
+            var tenant = await _tenantRepository.GetByIdAsync(activeMembership.TenantId, ct);
+            activeTenantName = tenant?.DisplayName ?? tenant?.Name;
+            activeTenantLogoUrl = tenant?.LogoUrl;
+        }
+        return new UserSessionResponse(user.Id, user.Email, user.Role.ToString(), activeMembership?.TenantId, activeTenantName, activeTenantLogoUrl, memberships);
     }
 
     public async Task<string> SelectTenantContextAsync(Guid userId, SelectTenantContextCommand command, CancellationToken ct)
