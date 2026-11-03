@@ -13,6 +13,7 @@ namespace Unimag.Inventario.Api.Tenants;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class TenantsController : ControllerBase
 {
     private readonly IUseCase<CreateTenantCommand, TenantResponse> _create;
@@ -30,6 +31,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<TenantResponse>> Create([FromBody] CreateTenantRequest request, CancellationToken ct)
     {
         var result = await _create.ExecuteAsync(TenantMapper.ToCreateCommand(request), ct);
