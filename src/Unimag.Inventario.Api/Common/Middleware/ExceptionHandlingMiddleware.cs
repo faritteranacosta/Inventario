@@ -8,6 +8,7 @@ using Unimag.Inventario.Domain.Tenants.Exceptions;
 using Unimag.Inventario.Domain.Users;
 using Unimag.Inventario.Domain.InventoryMovements.Exceptions;
 using Unimag.Inventario.Domain.Suppliers.Exceptions;
+using Unimag.Inventario.Domain.Purchases.Exceptions;
 
 namespace Unimag.Inventario.Api.Common.Middleware;
 
@@ -82,6 +83,7 @@ public sealed class ExceptionHandlingMiddleware
         TenantSuspendedException => StatusCodes.Status403Forbidden,
         InsufficientStockException => StatusCodes.Status409Conflict,
         SupplierNotFoundException => StatusCodes.Status404NotFound,
+        PurchaseNotFoundException => StatusCodes.Status404NotFound,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
     };

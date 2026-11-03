@@ -10,6 +10,7 @@ using Unimag.Inventario.Domain.Tenants.Contracts;
 using Unimag.Inventario.Domain.Users.Contracts;
 using Unimag.Inventario.Domain.InventoryMovements.Contracts;
 using Unimag.Inventario.Domain.Suppliers.Contracts;
+using Unimag.Inventario.Domain.Purchases.Contracts;
 using Unimag.Inventario.Infrastructure.Auth;
 using Unimag.Inventario.Infrastructure.Categories.Repositories;
 using Unimag.Inventario.Infrastructure.Persistence;
@@ -20,6 +21,7 @@ using Unimag.Inventario.Infrastructure.Tenants.Repositories;
 using Unimag.Inventario.Infrastructure.Users.Repositories;
 using Unimag.Inventario.Infrastructure.InventoryMovements.Repositories;
 using Unimag.Inventario.Infrastructure.Suppliers.Repositories;
+using Unimag.Inventario.Infrastructure.Purchases.Repositories;
 
 namespace Unimag.Inventario.Infrastructure;
 
@@ -45,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantMembershipRepository, TenantMembershipRepository>();
         services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
+        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();

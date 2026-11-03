@@ -42,6 +42,11 @@ using Unimag.Inventario.Application.Suppliers.Commands.DeleteSupplier;
 using Unimag.Inventario.Application.Suppliers.Dtos;
 using Unimag.Inventario.Application.Suppliers.Queries.GetSupplierById;
 using Unimag.Inventario.Application.Suppliers.Queries.ListSuppliers;
+using Unimag.Inventario.Application.Purchases.Commands.CreatePurchase;
+using Unimag.Inventario.Application.Purchases.Commands.ChangePurchaseStatus;
+using Unimag.Inventario.Application.Purchases.Dtos;
+using Unimag.Inventario.Application.Purchases.Queries.GetPurchaseById;
+using Unimag.Inventario.Application.Purchases.Queries.ListPurchases;
 
 namespace Unimag.Inventario.Application;
 
@@ -93,6 +98,10 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<DeleteSupplierCommand, bool>, DeleteSupplierUseCase>();
         services.AddScoped<IUseCase<GetSupplierByIdQuery, SupplierResponse>, GetSupplierByIdUseCase>();
         services.AddScoped<IUseCase<ListSuppliersQuery, IReadOnlyList<SupplierResponse>>, ListSuppliersUseCase>();
+        services.AddScoped<IUseCase<CreatePurchaseCommand, PurchaseResponse>, CreatePurchaseUseCase>();
+        services.AddScoped<IUseCase<ChangePurchaseStatusCommand, PurchaseResponse>, ChangePurchaseStatusUseCase>();
+        services.AddScoped<IUseCase<GetPurchaseByIdQuery, PurchaseResponse>, GetPurchaseByIdUseCase>();
+        services.AddScoped<IUseCase<ListPurchasesQuery, IReadOnlyList<PurchaseResponse>>, ListPurchasesUseCase>();
 
         return services;
     }

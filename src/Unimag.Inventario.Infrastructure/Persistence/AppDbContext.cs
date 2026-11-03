@@ -6,6 +6,7 @@ using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Users;
 using Unimag.Inventario.Domain.InventoryMovements;
 using Unimag.Inventario.Domain.Suppliers;
+using Unimag.Inventario.Domain.Purchases;
 
 namespace Unimag.Inventario.Infrastructure.Persistence;
 
@@ -37,6 +38,10 @@ public class AppDbContext : DbContext
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     public DbSet<Supplier> Suppliers => Set<Supplier>();
+
+    public DbSet<Purchase> Purchases => Set<Purchase>();
+
+    public DbSet<PurchaseItem> PurchaseItems => Set<PurchaseItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
