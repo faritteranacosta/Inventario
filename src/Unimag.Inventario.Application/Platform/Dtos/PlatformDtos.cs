@@ -73,6 +73,7 @@ public sealed record AuditEventResponse(
     string? Metadata);
 
 public sealed record AuditQuery(
+    Guid? ActorUserId,
     string? Action,
     string? ResourceType,
     DateTime? FromUtc,

@@ -6,7 +6,7 @@ public interface IPlatformAuditRepository
 {
     Task AddAsync(PlatformAuditEvent auditEvent, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<PlatformAuditEvent> Items, int TotalItems)> GetPageAsync(
-        string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
+        Guid? actorUserId, string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
         int skip, int take, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

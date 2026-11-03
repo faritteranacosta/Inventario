@@ -14,10 +14,12 @@ public sealed class PlatformAuditRepository : IPlatformAuditRepository
         => await _db.PlatformAuditEvents.AddAsync(auditEvent, ct);
 
     public async Task<(IReadOnlyList<PlatformAuditEvent> Items, int TotalItems)> GetPageAsync(
-        string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
+        Guid? actorUserId, string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
         int skip, int take, CancellationToken ct = default)
     {
         var query = _db.PlatformAuditEvents.AsNoTracking().AsQueryable();
+        if (actorUserId.HasValue)
+            query = query.Where(e => e.ActorUserId == actorUserId.Value);
         if (!string.IsNullOrWhiteSpace(action))
             query = query.Where(e => e.Action == action);
         if (!string.IsNullOrWhiteSpace(resourceType))

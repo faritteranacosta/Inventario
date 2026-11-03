@@ -122,11 +122,11 @@ public sealed class PlatformManagementService : IPlatformManagementService
     public async Task<PagedResponse<AuditEventResponse>> ListAuditAsync(
         AuditQuery? query = null, CancellationToken ct = default)
     {
-        query ??= new AuditQuery(null, null, null, null);
+        query ??= new AuditQuery(null, null, null, null, null);
         var page = Math.Max(1, query.Page);
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
         var result = await _auditRepository.GetPageAsync(
-            query.Action, query.ResourceType, query.FromUtc, query.ToUtc,
+            query.ActorUserId, query.Action, query.ResourceType, query.FromUtc, query.ToUtc,
             (page - 1) * pageSize, pageSize, ct);
         var items = result.Items
             .Select(e => new AuditEventResponse(e.Id, e.ActorUserId, e.Action, e.ResourceType,

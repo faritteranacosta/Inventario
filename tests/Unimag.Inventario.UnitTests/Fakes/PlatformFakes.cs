@@ -117,10 +117,12 @@ public sealed class InMemoryPlatformAuditRepository : IPlatformAuditRepository
     }
 
     public Task<(IReadOnlyList<PlatformAuditEvent> Items, int TotalItems)> GetPageAsync(
-        string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
+        Guid? actorUserId, string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
         int skip, int take, CancellationToken cancellationToken = default)
     {
         var query = Items.AsEnumerable();
+        if (actorUserId.HasValue)
+            query = query.Where(e => e.ActorUserId == actorUserId.Value);
         if (!string.IsNullOrWhiteSpace(action))
             query = query.Where(e => e.Action == action);
         if (!string.IsNullOrWhiteSpace(resourceType))

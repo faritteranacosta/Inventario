@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Text.Json;
 using Unimag.Inventario.Application.Common.Interfaces;
 
 namespace Unimag.Inventario.Api.Common;
@@ -9,5 +10,9 @@ public sealed class RequestMetadata(IHttpContextAccessor accessor) : IRequestMet
     public string? UserAgent => accessor.HttpContext?.Request.Headers.UserAgent.ToString();
     public string? Metadata => accessor.HttpContext is null
         ? null
-        : $"{{\"method\":\"{accessor.HttpContext.Request.Method}\",\"path\":\"{accessor.HttpContext.Request.Path}\"}}";
+        : JsonSerializer.Serialize(new
+        {
+            method = accessor.HttpContext.Request.Method,
+            path = accessor.HttpContext.Request.Path.Value
+        });
 }
