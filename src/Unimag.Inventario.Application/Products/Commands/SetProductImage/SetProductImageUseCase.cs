@@ -23,6 +23,6 @@ public sealed class SetProductImageUseCase : IUseCase<SetProductImageCommand, Pr
         await _productRepository.UpdateAsync(product, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
 
-        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.CreatedAtUtc);
+        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.MinimumStock, product.Barcode, product.CreatedAtUtc);
     }
 }

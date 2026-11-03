@@ -32,6 +32,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.ImageUrl)
             .HasMaxLength(500);
 
+        builder.Property(p => p.Barcode)
+            .HasMaxLength(100);
+
+        builder.HasIndex(p => new { p.TenantId, p.Barcode })
+            .IsUnique()
+            .HasFilter("[Barcode] IS NOT NULL");
+
         builder.Property(p => p.CreatedAtUtc)
             .IsRequired();
 

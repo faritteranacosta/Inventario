@@ -19,6 +19,6 @@ public sealed class GetProductByIdUseCase : IUseCase<GetProductByIdQuery, Produc
         var product = await _productRepository.GetByIdAsync(input.Id, cancellationToken)
             ?? throw new ProductNotFoundException(input.Id);
 
-        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.CreatedAtUtc);
+        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.MinimumStock, product.Barcode, product.CreatedAtUtc);
     }
 }

@@ -31,6 +31,6 @@ public sealed class ListProductsUseCase : IUseCase<ListProductsQuery, IReadOnlyL
             products = products.Where(p => p.Name.ToLowerInvariant().Contains(term)).ToList();
         }
 
-        return products.Select(p => new ProductResponse(p.Id, p.Name, p.Description, p.Price, p.Stock, p.CategoryId, p.ImageUrl, p.CreatedAtUtc)).ToList();
+        return products.Select(p => new ProductResponse(p.Id, p.Name, p.Description, p.Price, p.Stock, p.CategoryId, p.ImageUrl, p.MinimumStock, p.Barcode, p.CreatedAtUtc)).ToList();
     }
 }

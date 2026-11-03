@@ -34,6 +34,34 @@ public sealed class ProductRepository : IProductRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
+    {
+        var normalized = barcode.Trim();
+        return await _dbContext.Products.FirstOrDefaultAsync(
+            p => p.TenantId == _currentTenant.TenantId && p.Barcode == normalized,
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Product>> GetLowStockAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Products.AsNoTracking()
+            .Where(p => p.TenantId == _currentTenant.TenantId &&
+                        ((p.Stock == 0) || (p.MinimumStock.HasValue && p.Stock <= p.MinimumStock.Value)))
+            .OrderBy(p => p.Stock)
+            .ThenBy(p => p.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> BarcodeExistsAsync(string barcode, Guid? excludingProductId = null, CancellationToken cancellationToken = default)
+    {
+        var normalized = barcode.Trim();
+        return _dbContext.Products.AnyAsync(
+            p => p.TenantId == _currentTenant.TenantId &&
+                 p.Barcode == normalized &&
+                 (!excludingProductId.HasValue || p.Id != excludingProductId.Value),
+            cancellationToken);
+    }
+
     public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         await _dbContext.Products.AddAsync(product, cancellationToken);

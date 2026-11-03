@@ -19,10 +19,15 @@ public sealed class UpdateProductUseCase : IUseCase<UpdateProductCommand, Produc
         var product = await _productRepository.GetByIdAsync(input.Id, cancellationToken)
             ?? throw new ProductNotFoundException(input.Id);
 
-        product.UpdateDetails(input.Name, input.Description, input.Price, input.Stock, input.CategoryId);
+        if (input.Barcode is not null && await _productRepository.BarcodeExistsAsync(input.Barcode, product.Id, cancellationToken))
+        {
+            throw new BarcodeAlreadyExistsException(input.Barcode.Trim());
+        }
+
+        product.UpdateDetails(input.Name, input.Description, input.Price, input.Stock, input.CategoryId, input.MinimumStock, input.Barcode);
         await _productRepository.UpdateAsync(product, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
 
-        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.CreatedAtUtc);
+        return new ProductResponse(product.Id, product.Name, product.Description, product.Price, product.Stock, product.CategoryId, product.ImageUrl, product.MinimumStock, product.Barcode, product.CreatedAtUtc);
     }
 }
