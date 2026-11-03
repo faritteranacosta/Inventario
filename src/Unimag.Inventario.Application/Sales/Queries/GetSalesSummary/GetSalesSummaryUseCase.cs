@@ -12,7 +12,9 @@ public sealed class GetSalesSummaryUseCase : IUseCase<GetSalesSummaryQuery, Sale
 
     public async Task<SalesSummaryResponse> ExecuteAsync(GetSalesSummaryQuery input, CancellationToken cancellationToken = default)
     {
-        var sales = await _saleRepo.GetByDateRangeAsync(input.FromUtc, input.ToUtc, cancellationToken);
+        var to = input.ToUtc ?? DateTime.UtcNow;
+        var from = input.FromUtc ?? to.AddDays(-7);
+        var sales = await _saleRepo.GetByDateRangeAsync(from, to, cancellationToken);
 
         var groups = input.GroupBy.ToLowerInvariant() == "month"
             ? sales.GroupBy(s => new DateTime(s.SaleDateUtc.Year, s.SaleDateUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc))

@@ -5,6 +5,7 @@ using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.Domain.Sales;
 using Unimag.Inventario.Domain.Sales.Contracts;
 using Unimag.Inventario.Domain.Sales.Exceptions;
+using Unimag.Inventario.Domain.Tenants.Contracts;
 
 namespace Unimag.Inventario.Application.Sales.Commands.CreateSale;
 
@@ -12,11 +13,13 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
 {
     private readonly IProductRepository _productRepository;
     private readonly ISaleRepository _saleRepository;
+    private readonly ITenantRepository _tenantRepository;
 
-    public CreateSaleUseCase(IProductRepository productRepository, ISaleRepository saleRepository)
+    public CreateSaleUseCase(IProductRepository productRepository, ISaleRepository saleRepository, ITenantRepository tenantRepository)
     {
         _productRepository = productRepository;
         _saleRepository = saleRepository;
+        _tenantRepository = tenantRepository;
     }
 
     public async Task<SaleResponse> ExecuteAsync(CreateSaleCommand input, CancellationToken cancellationToken = default)
@@ -35,10 +38,12 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
             product.DecreaseStock(quantity);
             await _productRepository.UpdateAsync(product, cancellationToken);
 
-            saleItems.Add(new SaleItem(productId, quantity, product.Price));
+            saleItems.Add(new SaleItem(productId, product.Name, quantity, product.Price));
         }
 
-        var sale = Sale.Create(input.TenantId, saleItems);
+        var tenant = await _tenantRepository.GetByIdAsync(input.TenantId, cancellationToken);
+        var tenantName = tenant?.Name ?? string.Empty;
+        var sale = Sale.Create(input.TenantId, tenantName, saleItems);
         await _saleRepository.AddAsync(sale, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
         await _saleRepository.SaveChangesAsync(cancellationToken);
@@ -47,7 +52,7 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
     }
 
     private static SaleResponse ToResponse(Sale sale) =>
-        new(sale.Id, sale.SaleDateUtc,
-            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.Quantity, i.UnitPrice, i.Total)).ToList(),
+        new(sale.Id, sale.TenantName, sale.SaleDateUtc,
+            sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.Total)).ToList(),
             sale.Total);
 }
