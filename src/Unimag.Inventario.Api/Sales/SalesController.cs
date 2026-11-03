@@ -9,6 +9,7 @@ using Unimag.Inventario.Application.Sales.Queries.GetSaleById;
 using Unimag.Inventario.Application.Sales.Queries.GetSalesSummary;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
 using Unimag.Inventario.Domain.Common;
+using Unimag.Inventario.Application.Common.Dtos;
 
 namespace Unimag.Inventario.Api.Sales;
 
@@ -19,14 +20,14 @@ public sealed class SalesController : ControllerBase
 {
     private readonly IUseCase<CreateSaleCommand, SaleResponse> _create;
     private readonly IUseCase<GetSaleByIdQuery, SaleResponse> _getById;
-    private readonly IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>> _list;
+    private readonly IUseCase<ListSalesQuery, PagedResponse<SaleResponse>> _list;
     private readonly IUseCase<GetSalesSummaryQuery, SalesSummaryResponse> _summary;
     private readonly ICurrentTenant _currentTenant;
 
     public SalesController(
         IUseCase<CreateSaleCommand, SaleResponse> create,
         IUseCase<GetSaleByIdQuery, SaleResponse> getById,
-        IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>> list,
+        IUseCase<ListSalesQuery, PagedResponse<SaleResponse>> list,
         IUseCase<GetSalesSummaryQuery, SalesSummaryResponse> summary,
         ICurrentTenant currentTenant)
     {
@@ -50,10 +51,14 @@ public sealed class SalesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<SaleResponse>>> List(
-        [FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<SaleResponse>>> List(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _list.ExecuteAsync(SaleMapper.ToListQuery(from, to), cancellationToken);
+        var result = await _list.ExecuteAsync(SaleMapper.ToListQuery(from, to, page, pageSize), cancellationToken);
         return Ok(result);
     }
 

@@ -12,6 +12,6 @@ public static class SaleMapper
 
     public static GetSaleByIdQuery ToGetQuery(Guid id) => new(id);
 
-    public static ListSalesQuery ToListQuery(DateTime? from, DateTime? to) =>
-        new(from, to);
+    public static ListSalesQuery ToListQuery(DateTime? from, DateTime? to, int page, int pageSize) =>
+        new(from, to, page, pageSize);
 }

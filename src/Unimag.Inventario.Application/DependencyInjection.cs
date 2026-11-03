@@ -76,7 +76,7 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<CreateSaleCommand, SaleResponse>, CreateSaleUseCase>();
         services.AddScoped<IUseCase<GetSaleByIdQuery, SaleResponse>, GetSaleByIdUseCase>();
         services.AddScoped<IUseCase<GetSalesSummaryQuery, SalesSummaryResponse>, GetSalesSummaryUseCase>();
-        services.AddScoped<IUseCase<ListSalesQuery, IReadOnlyList<SaleResponse>>, ListSalesUseCase>();
+        services.AddScoped<IUseCase<ListSalesQuery, PagedResponse<SaleResponse>>, ListSalesUseCase>();
 
         services.AddScoped<IUseCase<CreateTenantCommand, TenantResponse>, CreateTenantUseCase>();
         services.AddScoped<IUseCase<UpdateTenantBrandingCommand, TenantResponse>, UpdateTenantBrandingUseCase>();
