@@ -91,7 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformManagementService, PlatformManagementService>();
         services.AddScoped<IUseCase<CreateInventoryMovementCommand, InventoryMovementResponse>, CreateInventoryMovementUseCase>();
         services.AddScoped<IUseCase<GetInventoryMovementByIdQuery, InventoryMovementResponse>, GetInventoryMovementByIdUseCase>();
-        services.AddScoped<IUseCase<ListInventoryMovementsQuery, IReadOnlyList<InventoryMovementResponse>>, ListInventoryMovementsUseCase>();
+        services.AddScoped<IUseCase<ListInventoryMovementsQuery, PagedResponse<InventoryMovementResponse>>, ListInventoryMovementsUseCase>();
         services.AddScoped<IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>>, ListProductAlertsUseCase>();
         services.AddScoped<IUseCase<GetProductByBarcodeQuery, ProductResponse>, GetProductByBarcodeUseCase>();
         services.AddScoped<IUseCase<CreateSupplierCommand, SupplierResponse>, CreateSupplierUseCase>();
@@ -102,7 +102,7 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<CreatePurchaseCommand, PurchaseResponse>, CreatePurchaseUseCase>();
         services.AddScoped<IUseCase<ChangePurchaseStatusCommand, PurchaseResponse>, ChangePurchaseStatusUseCase>();
         services.AddScoped<IUseCase<GetPurchaseByIdQuery, PurchaseResponse>, GetPurchaseByIdUseCase>();
-        services.AddScoped<IUseCase<ListPurchasesQuery, IReadOnlyList<PurchaseResponse>>, ListPurchasesUseCase>();
+        services.AddScoped<IUseCase<ListPurchasesQuery, PagedResponse<PurchaseResponse>>, ListPurchasesUseCase>();
 
         return services;
     }

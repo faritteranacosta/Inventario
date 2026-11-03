@@ -20,6 +20,8 @@ public static class InventoryMovementMapper
         Guid? productId,
         Unimag.Inventario.Domain.InventoryMovements.InventoryMovementType? type,
         DateTime? from,
-        DateTime? to) =>
-        new(productId, type, from, to);
+        DateTime? to,
+        int page,
+        int pageSize) =>
+        new(productId, type, from, to, page, pageSize);
 }

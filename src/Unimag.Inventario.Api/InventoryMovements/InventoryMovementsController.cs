@@ -11,6 +11,7 @@ using Unimag.Inventario.Application.InventoryMovements.Queries.GetInventoryMovem
 using Unimag.Inventario.Application.InventoryMovements.Queries.ListInventoryMovements;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.InventoryMovements;
+using Unimag.Inventario.Application.Common.Dtos;
 
 namespace Unimag.Inventario.Api.InventoryMovements;
 
@@ -21,13 +22,13 @@ public sealed class InventoryMovementsController : ControllerBase
 {
     private readonly IUseCase<CreateInventoryMovementCommand, InventoryMovementResponse> _create;
     private readonly IUseCase<GetInventoryMovementByIdQuery, InventoryMovementResponse> _getById;
-    private readonly IUseCase<ListInventoryMovementsQuery, IReadOnlyList<InventoryMovementResponse>> _list;
+    private readonly IUseCase<ListInventoryMovementsQuery, PagedResponse<InventoryMovementResponse>> _list;
     private readonly ICurrentTenant _currentTenant;
 
     public InventoryMovementsController(
         IUseCase<CreateInventoryMovementCommand, InventoryMovementResponse> create,
         IUseCase<GetInventoryMovementByIdQuery, InventoryMovementResponse> getById,
-        IUseCase<ListInventoryMovementsQuery, IReadOnlyList<InventoryMovementResponse>> list,
+        IUseCase<ListInventoryMovementsQuery, PagedResponse<InventoryMovementResponse>> list,
         ICurrentTenant currentTenant)
     {
         _create = create;
@@ -39,7 +40,7 @@ public sealed class InventoryMovementsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<InventoryMovementResponse>> Create(
         CreateInventoryMovementRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var result = await _create.ExecuteAsync(
             InventoryMovementMapper.ToCreateCommand(
@@ -52,15 +53,17 @@ public sealed class InventoryMovementsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<InventoryMovementResponse>>> List(
+    public async Task<ActionResult<PagedResponse<InventoryMovementResponse>>> List(
         [FromQuery] Guid? productId,
         [FromQuery] InventoryMovementType? type,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
     {
         var result = await _list.ExecuteAsync(
-            InventoryMovementMapper.ToListQuery(productId, type, from, to),
+            InventoryMovementMapper.ToListQuery(productId, type, from, to, page, pageSize),
             cancellationToken);
         return Ok(result);
     }

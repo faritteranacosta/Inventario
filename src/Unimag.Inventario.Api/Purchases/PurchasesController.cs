@@ -11,6 +11,7 @@ using Unimag.Inventario.Application.Purchases.Dtos;
 using Unimag.Inventario.Application.Purchases.Queries.GetPurchaseById;
 using Unimag.Inventario.Application.Purchases.Queries.ListPurchases;
 using Unimag.Inventario.Domain.Common;
+using Unimag.Inventario.Application.Common.Dtos;
 
 namespace Unimag.Inventario.Api.Purchases;
 
@@ -22,14 +23,14 @@ public sealed class PurchasesController : ControllerBase
     private readonly IUseCase<CreatePurchaseCommand, PurchaseResponse> _create;
     private readonly IUseCase<ChangePurchaseStatusCommand, PurchaseResponse> _changeStatus;
     private readonly IUseCase<GetPurchaseByIdQuery, PurchaseResponse> _getById;
-    private readonly IUseCase<ListPurchasesQuery, IReadOnlyList<PurchaseResponse>> _list;
+    private readonly IUseCase<ListPurchasesQuery, PagedResponse<PurchaseResponse>> _list;
     private readonly ICurrentTenant _currentTenant;
 
     public PurchasesController(
         IUseCase<CreatePurchaseCommand, PurchaseResponse> create,
         IUseCase<ChangePurchaseStatusCommand, PurchaseResponse> changeStatus,
         IUseCase<GetPurchaseByIdQuery, PurchaseResponse> getById,
-        IUseCase<ListPurchasesQuery, IReadOnlyList<PurchaseResponse>> list,
+        IUseCase<ListPurchasesQuery, PagedResponse<PurchaseResponse>> list,
         ICurrentTenant currentTenant)
     {
         _create = create;
@@ -52,10 +53,12 @@ public sealed class PurchasesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<PurchaseResponse>>> List(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<PurchaseResponse>>> List(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _list.ExecuteAsync(new ListPurchasesQuery(), cancellationToken);
+        var result = await _list.ExecuteAsync(new ListPurchasesQuery(page, pageSize), cancellationToken);
         return Ok(result);
     }
 

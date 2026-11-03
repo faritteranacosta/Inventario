@@ -6,4 +6,6 @@ public sealed record ListInventoryMovementsQuery(
     Guid? ProductId,
     InventoryMovementType? Type,
     DateTime? FromUtc,
-    DateTime? ToUtc);
+    DateTime? ToUtc,
+    int Page = 1,
+    int PageSize = 25);
