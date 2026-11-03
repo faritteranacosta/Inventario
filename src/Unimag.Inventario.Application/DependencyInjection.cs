@@ -30,6 +30,12 @@ using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Application.Users.Queries.GetUserById;
 using Unimag.Inventario.Application.Platform;
 using Unimag.Inventario.Application.Common.Interfaces;
+using Unimag.Inventario.Application.InventoryMovements.Commands.CreateInventoryMovement;
+using Unimag.Inventario.Application.InventoryMovements.Dtos;
+using Unimag.Inventario.Application.InventoryMovements.Queries.GetInventoryMovementById;
+using Unimag.Inventario.Application.InventoryMovements.Queries.ListInventoryMovements;
+using Unimag.Inventario.Application.Products.Queries.ListProductAlerts;
+using Unimag.Inventario.Application.Products.Queries.GetProductByBarcode;
 
 namespace Unimag.Inventario.Application;
 
@@ -71,6 +77,11 @@ public static class DependencyInjection
 
         services.AddScoped<IUseCase<LoginCommand, LoginResponse>, LoginUseCase>();
         services.AddScoped<IPlatformManagementService, PlatformManagementService>();
+        services.AddScoped<IUseCase<CreateInventoryMovementCommand, InventoryMovementResponse>, CreateInventoryMovementUseCase>();
+        services.AddScoped<IUseCase<GetInventoryMovementByIdQuery, InventoryMovementResponse>, GetInventoryMovementByIdUseCase>();
+        services.AddScoped<IUseCase<ListInventoryMovementsQuery, IReadOnlyList<InventoryMovementResponse>>, ListInventoryMovementsUseCase>();
+        services.AddScoped<IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>>, ListProductAlertsUseCase>();
+        services.AddScoped<IUseCase<GetProductByBarcodeQuery, ProductResponse>, GetProductByBarcodeUseCase>();
 
         return services;
     }

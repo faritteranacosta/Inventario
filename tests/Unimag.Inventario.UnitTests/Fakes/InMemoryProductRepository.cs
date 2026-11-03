@@ -23,6 +23,21 @@ public sealed class InMemoryProductRepository : IProductRepository
     public Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Product>>(_store.Values.Where(p => p.CategoryId == categoryId && p.TenantId == _tenant.TenantId).ToList());
 
+    public Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
+        => Task.FromResult(_store.Values.FirstOrDefault(p =>
+            p.TenantId == _tenant.TenantId && p.Barcode == barcode.Trim()));
+
+    public Task<IReadOnlyList<Product>> GetLowStockAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Product>>(_store.Values.Where(p =>
+            p.TenantId == _tenant.TenantId &&
+            (p.Stock == 0 || (p.MinimumStock.HasValue && p.Stock <= p.MinimumStock.Value))).ToList());
+
+    public Task<bool> BarcodeExistsAsync(string barcode, Guid? excludingProductId = null, CancellationToken cancellationToken = default)
+        => Task.FromResult(_store.Values.Any(p =>
+            p.TenantId == _tenant.TenantId &&
+            p.Barcode == barcode.Trim() &&
+            (!excludingProductId.HasValue || p.Id != excludingProductId.Value)));
+
     public Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         _store[product.Id] = product;

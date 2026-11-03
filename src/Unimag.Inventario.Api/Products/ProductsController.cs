@@ -11,6 +11,8 @@ using Unimag.Inventario.Application.Products.Commands.UpdateProduct;
 using Unimag.Inventario.Application.Products.Dtos;
 using Unimag.Inventario.Application.Products.Queries.GetProductById;
 using Unimag.Inventario.Application.Products.Queries.ListProducts;
+using Unimag.Inventario.Application.Products.Queries.ListProductAlerts;
+using Unimag.Inventario.Application.Products.Queries.GetProductByBarcode;
 using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Products;
@@ -26,6 +28,8 @@ public sealed class ProductsController : ControllerBase
     private readonly IUseCase<SetProductImageCommand, ProductResponse> _setImage;
     private readonly IUseCase<GetProductByIdQuery, ProductResponse> _getById;
     private readonly IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> _list;
+    private readonly IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>> _alerts;
+    private readonly IUseCase<GetProductByBarcodeQuery, ProductResponse> _getByBarcode;
     private readonly ICurrentTenant _currentTenant;
     private readonly IFileStorage _fileStorage;
 
@@ -36,6 +40,8 @@ public sealed class ProductsController : ControllerBase
         IUseCase<SetProductImageCommand, ProductResponse> setImage,
         IUseCase<GetProductByIdQuery, ProductResponse> getById,
         IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> list,
+        IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>> alerts,
+        IUseCase<GetProductByBarcodeQuery, ProductResponse> getByBarcode,
         ICurrentTenant currentTenant,
         IFileStorage fileStorage)
     {
@@ -45,8 +51,19 @@ public sealed class ProductsController : ControllerBase
         _setImage = setImage;
         _getById = getById;
         _list = list;
+        _alerts = alerts;
+        _getByBarcode = getByBarcode;
         _currentTenant = currentTenant;
         _fileStorage = fileStorage;
+    }
+
+    [HttpGet("alerts")]
+    public async Task<ActionResult<IReadOnlyList<ProductAlertResponse>>> Alerts(
+        [FromQuery] string? kind,
+        CancellationToken cancellationToken)
+    {
+        var result = await _alerts.ExecuteAsync(new ListProductAlertsQuery(kind), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost]
@@ -68,6 +85,16 @@ public sealed class ProductsController : ControllerBase
     public async Task<ActionResult<ProductResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _getById.ExecuteAsync(ProductMapper.ToGetQuery(id), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("by-barcode/{barcode}")]
+    public async Task<ActionResult<ProductResponse>> GetByBarcode(
+        string barcode,
+        CancellationToken cancellationToken)
+    {
+        var result = await _getByBarcode.ExecuteAsync(
+            ProductMapper.ToBarcodeQuery(barcode), cancellationToken);
         return Ok(result);
     }
 

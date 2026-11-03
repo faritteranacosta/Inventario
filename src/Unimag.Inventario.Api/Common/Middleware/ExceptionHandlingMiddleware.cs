@@ -6,6 +6,7 @@ using Unimag.Inventario.Domain.Sales.Exceptions;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
 using Unimag.Inventario.Domain.Users;
+using Unimag.Inventario.Domain.InventoryMovements.Exceptions;
 
 namespace Unimag.Inventario.Api.Common.Middleware;
 
@@ -53,7 +54,12 @@ public sealed class ExceptionHandlingMiddleware
                 ? "An unexpected error occurred."
                 : exception.Message;
 
-            await context.Response.WriteAsJsonAsync(new ErrorResponse(message));
+            await context.Response.WriteAsJsonAsync(
+                ErrorResponse.From(
+                    GetErrorCode(statusCode, exception),
+                    message,
+                    null,
+                    context.TraceIdentifier));
         }
     }
 
@@ -76,5 +82,19 @@ public sealed class ExceptionHandlingMiddleware
         InsufficientStockException => StatusCodes.Status409Conflict,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
+    };
+
+    private static string GetErrorCode(int statusCode, Exception exception) => exception switch
+    {
+        InsufficientStockException => "INSUFFICIENT_STOCK",
+        InventoryStockNegativeException => "INSUFFICIENT_STOCK",
+        BarcodeAlreadyExistsException => "BARCODE_ALREADY_EXISTS",
+        _ when statusCode == StatusCodes.Status400BadRequest => "INVALID_REQUEST",
+        _ when statusCode == StatusCodes.Status401Unauthorized => "UNAUTHENTICATED",
+        _ when statusCode == StatusCodes.Status403Forbidden => "FORBIDDEN",
+        _ when statusCode == StatusCodes.Status404NotFound => "RESOURCE_NOT_FOUND",
+        _ when statusCode == StatusCodes.Status409Conflict => "CONFLICT",
+        _ when statusCode == StatusCodes.Status422UnprocessableEntity => "VALIDATION_ERROR",
+        _ => "INTERNAL_ERROR"
     };
 }

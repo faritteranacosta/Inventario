@@ -1,8 +1,12 @@
 namespace Unimag.Inventario.Api.Common.Errors;
 
 /// <summary>
-/// Uniform error body for this Api. Every error response — whether it comes
-/// from a Result.Failure mapped inside a controller or from an exception
-/// caught by ExceptionHandlingMiddleware — has this exact shape.
+/// Uniform error body for this Api.
 /// </summary>
-public sealed record ErrorResponse(string Message);
+public sealed record ErrorResponse(ErrorBody Error)
+{
+    public static ErrorResponse From(string code, string message, object? details, string traceId) =>
+        new(new ErrorBody(code, message, details, traceId));
+}
+
+public sealed record ErrorBody(string Code, string Message, object? Details, string TraceId);

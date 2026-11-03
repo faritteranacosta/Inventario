@@ -19,6 +19,10 @@ public sealed class Product : BaseEntity
 
     public string? ImageUrl { get; private set; }
 
+    public int? MinimumStock { get; private set; }
+
+    public string? Barcode { get; private set; }
+
     public DateTime CreatedAtUtc { get; private set; }
 
     private Product()
@@ -26,7 +30,7 @@ public sealed class Product : BaseEntity
         // Required by EF Core materialization.
     }
 
-    private Product(Guid id, Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl)
+    private Product(Guid id, Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl, int? minimumStock, string? barcode)
     {
         Id = id;
         TenantId = tenantId;
@@ -36,10 +40,12 @@ public sealed class Product : BaseEntity
         Stock = stock;
         CategoryId = categoryId;
         ImageUrl = imageUrl;
+        MinimumStock = minimumStock;
+        Barcode = NormalizeBarcode(barcode);
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    public static Product Create(Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl = null)
+    public static Product Create(Guid tenantId, string name, string? description, decimal price, int stock, Guid categoryId, string? imageUrl = null, int? minimumStock = null, string? barcode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -56,10 +62,11 @@ public sealed class Product : BaseEntity
             throw new InvalidPriceException();
         }
 
-        return new Product(Guid.NewGuid(), tenantId, name.Trim(), description?.Trim(), price, stock, categoryId, imageUrl);
+        ValidateMinimumStock(minimumStock);
+        return new Product(Guid.NewGuid(), tenantId, name.Trim(), description?.Trim(), price, stock, categoryId, imageUrl, minimumStock, barcode);
     }
 
-    public void UpdateDetails(string name, string? description, decimal price, int stock, Guid categoryId)
+    public void UpdateDetails(string name, string? description, decimal price, int stock, Guid categoryId, int? minimumStock = null, string? barcode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -81,6 +88,9 @@ public sealed class Product : BaseEntity
         Price = price;
         Stock = stock;
         CategoryId = categoryId;
+        ValidateMinimumStock(minimumStock);
+        MinimumStock = minimumStock;
+        Barcode = NormalizeBarcode(barcode);
     }
 
     public void SetImage(string? imageUrl)
@@ -92,7 +102,7 @@ public sealed class Product : BaseEntity
     {
         if (quantity <= 0)
         {
-            return;
+            throw new InvalidStockQuantityException();
         }
 
         if (Stock < quantity)
@@ -101,5 +111,29 @@ public sealed class Product : BaseEntity
         }
 
         Stock -= quantity;
+    }
+
+    public void IncreaseStock(int quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new InvalidStockQuantityException();
+        }
+
+        Stock += quantity;
+    }
+
+    private static void ValidateMinimumStock(int? minimumStock)
+    {
+        if (minimumStock < 0)
+        {
+            throw new InvalidMinimumStockException();
+        }
+    }
+
+    private static string? NormalizeBarcode(string? barcode)
+    {
+        var normalized = barcode?.Trim();
+        return string.IsNullOrEmpty(normalized) ? null : normalized;
     }
 }
