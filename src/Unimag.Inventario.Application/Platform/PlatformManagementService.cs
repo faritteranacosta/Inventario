@@ -1,3 +1,4 @@
+using Unimag.Inventario.Application.Common.Dtos;
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Platform.Dtos;
 using Unimag.Inventario.Application.Users.Dtos;
@@ -18,6 +19,7 @@ public sealed class PlatformManagementService : IPlatformManagementService
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IPlatformAuditRepository _auditRepository;
+    private readonly IRequestMetadata _requestMetadata;
 
     public PlatformManagementService(
         ITenantRepository tenantRepository,
@@ -25,7 +27,8 @@ public sealed class PlatformManagementService : IPlatformManagementService
         ITenantMembershipRepository membershipRepository,
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
-        IPlatformAuditRepository auditRepository)
+        IPlatformAuditRepository auditRepository,
+        IRequestMetadata? requestMetadata = null)
     {
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
@@ -33,6 +36,7 @@ public sealed class PlatformManagementService : IPlatformManagementService
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _auditRepository = auditRepository;
+        _requestMetadata = requestMetadata ?? EmptyRequestMetadata.Instance;
     }
 
     public async Task<IReadOnlyList<PlatformTenantResponse>> ListTenantsAsync(CancellationToken ct)
@@ -115,10 +119,34 @@ public sealed class PlatformManagementService : IPlatformManagementService
         await _tenantRepository.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<AuditEventResponse>> ListAuditAsync(CancellationToken ct)
-        => (await _auditRepository.GetAllAsync(ct))
-            .Select(e => new AuditEventResponse(e.Id, e.ActorUserId, e.Action, e.ResourceType, e.ResourceId, e.CreatedAtUtc))
+    public async Task<PagedResponse<AuditEventResponse>> ListAuditAsync(
+        AuditQuery? query = null, CancellationToken ct = default)
+    {
+        query ??= new AuditQuery(null, null, null, null);
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var result = await _auditRepository.GetPageAsync(
+            query.Action, query.ResourceType, query.FromUtc, query.ToUtc,
+            (page - 1) * pageSize, pageSize, ct);
+        var items = result.Items
+            .Select(e => new AuditEventResponse(e.Id, e.ActorUserId, e.Action, e.ResourceType,
+                e.ResourceId, e.CreatedAtUtc, e.IpAddress, e.UserAgent, e.Metadata))
             .ToList();
+        return new PagedResponse<AuditEventResponse>(
+            items, page, pageSize, result.TotalItems,
+            (int)Math.Ceiling(result.TotalItems / (double)pageSize));
+    }
+
+    public Task<PagedResponse<AuditEventResponse>> ListAuditAsync(CancellationToken ct)
+        => ListAuditAsync(null, ct);
+
+    private sealed class EmptyRequestMetadata : IRequestMetadata
+    {
+        public static EmptyRequestMetadata Instance { get; } = new();
+        public string? IpAddress => null;
+        public string? UserAgent => null;
+        public string? Metadata => null;
+    }
 
     public async Task<UserResponse> UpdateProfileAsync(UpdateProfileCommand command, CancellationToken ct)
     {
@@ -239,7 +267,8 @@ public sealed class PlatformManagementService : IPlatformManagementService
 
     private async Task AuditAsync(Guid actorUserId, string action, string resourceType, Guid? resourceId, CancellationToken ct)
     {
-        await _auditRepository.AddAsync(PlatformAuditEvent.Create(actorUserId, action, resourceType, resourceId), ct);
+        await _auditRepository.AddAsync(PlatformAuditEvent.Create(actorUserId, action, resourceType, resourceId,
+            _requestMetadata.IpAddress, _requestMetadata.UserAgent, _requestMetadata.Metadata), ct);
         await _auditRepository.SaveChangesAsync(ct);
     }
 

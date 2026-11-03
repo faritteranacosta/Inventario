@@ -4,8 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Unimag.Inventario.Api.Common.Middleware;
 using Unimag.Inventario.Api.Common.Tenancy;
+using Unimag.Inventario.Api.Common;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Application;
+using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentTenant, CurrentTenant>();
+builder.Services.AddScoped<IRequestMetadata, RequestMetadata>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -1,3 +1,4 @@
+using Unimag.Inventario.Application.Common.Dtos;
 using Unimag.Inventario.Application.Platform.Dtos;
 using Unimag.Inventario.Application.Users.Dtos;
 
@@ -18,7 +19,7 @@ public interface IPlatformManagementService
     Task<UserResponse> BootstrapPlatformAdminAsync(BootstrapPlatformAdminCommand command, CancellationToken cancellationToken);
     Task<PlatformTenantResponse> UpdateTenantAsync(Guid actorUserId, UpdateTenantCommand command, CancellationToken cancellationToken);
     Task DeleteTenantAsync(Guid actorUserId, Guid tenantId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<AuditEventResponse>> ListAuditAsync(CancellationToken cancellationToken);
+    Task<PagedResponse<AuditEventResponse>> ListAuditAsync(AuditQuery? query = null, CancellationToken cancellationToken = default);
     Task<UserResponse> UpdateProfileAsync(UpdateProfileCommand command, CancellationToken cancellationToken);
     Task ChangePasswordAsync(ChangePasswordCommand command, CancellationToken cancellationToken);
 }

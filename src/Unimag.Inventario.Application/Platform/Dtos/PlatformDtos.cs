@@ -67,4 +67,15 @@ public sealed record AuditEventResponse(
     string Action,
     string ResourceType,
     Guid? ResourceId,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    string? IpAddress,
+    string? UserAgent,
+    string? Metadata);
+
+public sealed record AuditQuery(
+    string? Action,
+    string? ResourceType,
+    DateTime? FromUtc,
+    DateTime? ToUtc,
+    int Page = 1,
+    int PageSize = 50);

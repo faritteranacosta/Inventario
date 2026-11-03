@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Platform.Requests;
 using Unimag.Inventario.Application.Common.Interfaces;
+using Unimag.Inventario.Application.Common.Dtos;
 using Unimag.Inventario.Application.Platform.Dtos;
 using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Domain.Tenants;
@@ -31,8 +32,9 @@ public sealed class PlatformController : ControllerBase
             new BootstrapPlatformAdminCommand(request.Email, request.Password), ct));
 
     [HttpGet("audit")]
-    public async Task<ActionResult<IReadOnlyList<AuditEventResponse>>> Audit(CancellationToken ct)
-        => Ok(await _service.ListAuditAsync(ct));
+    public async Task<ActionResult<PagedResponse<AuditEventResponse>>> Audit(
+        [FromQuery] AuditQuery query, CancellationToken ct)
+        => Ok(await _service.ListAuditAsync(query, ct));
 
     [HttpPost("tenants")]
     public async Task<ActionResult<PlatformTenantResponse>> CreateTenant(

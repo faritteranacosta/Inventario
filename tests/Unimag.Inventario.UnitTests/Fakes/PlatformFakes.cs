@@ -116,8 +116,23 @@ public sealed class InMemoryPlatformAuditRepository : IPlatformAuditRepository
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<PlatformAuditEvent>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<PlatformAuditEvent>>(Items.ToList());
+    public Task<(IReadOnlyList<PlatformAuditEvent> Items, int TotalItems)> GetPageAsync(
+        string? action, string? resourceType, DateTime? fromUtc, DateTime? toUtc,
+        int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var query = Items.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(action))
+            query = query.Where(e => e.Action == action);
+        if (!string.IsNullOrWhiteSpace(resourceType))
+            query = query.Where(e => e.ResourceType == resourceType);
+        if (fromUtc.HasValue)
+            query = query.Where(e => e.CreatedAtUtc >= fromUtc.Value);
+        if (toUtc.HasValue)
+            query = query.Where(e => e.CreatedAtUtc <= toUtc.Value);
+        var ordered = query.OrderByDescending(e => e.CreatedAtUtc).ToList();
+        return Task.FromResult<(IReadOnlyList<PlatformAuditEvent>, int)>(
+            (ordered.Skip(skip).Take(take).ToList(), ordered.Count));
+    }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
