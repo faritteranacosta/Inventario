@@ -14,7 +14,11 @@ public sealed class CurrentTenant : ICurrentTenant
         get
         {
             var claim = _accessor.HttpContext?.User?.FindFirst("tenant_id")?.Value;
-            return Guid.TryParse(claim, out var id) ? id : Guid.Empty;
+            if (Guid.TryParse(claim, out var id) && id != Guid.Empty)
+            {
+                return id;
+            }
+            throw new InvalidOperationException("No tenant context available for the current request.");
         }
     }
 }

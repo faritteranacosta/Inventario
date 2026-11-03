@@ -38,7 +38,18 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // JWT authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-secret-key-change-me-please-32chars!!";
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        jwtKey = "dev-secret-key-change-me-please-32chars!!";
+    }
+    else
+    {
+        throw new InvalidOperationException("Jwt:Key must be configured in production.");
+    }
+}
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
