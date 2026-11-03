@@ -37,6 +37,7 @@ public static class DependencyInjection
         // Sample uses EF Core InMemory so the service runs with zero setup.
         // Swap this for UseSqlServer/UseNpgsql/etc. when wiring a real database.
         services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("InventarioDb"));
+        services.AddScoped<ITransactionManager, EfTransactionManager>();
 
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();

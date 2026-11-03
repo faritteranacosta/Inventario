@@ -9,6 +9,7 @@ using Unimag.Inventario.Domain.Tenants.Contracts;
 using System.Security.Cryptography;
 using System.Text;
 using System.Globalization;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Application.Sales.Commands.CreateSale;
 
@@ -17,15 +18,21 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
     private readonly IProductRepository _productRepository;
     private readonly ISaleRepository _saleRepository;
     private readonly ITenantRepository _tenantRepository;
+    private readonly ITransactionManager _transactionManager;
 
-    public CreateSaleUseCase(IProductRepository productRepository, ISaleRepository saleRepository, ITenantRepository tenantRepository)
+    public CreateSaleUseCase(IProductRepository productRepository, ISaleRepository saleRepository,
+        ITenantRepository tenantRepository, ITransactionManager? transactionManager = null)
     {
         _productRepository = productRepository;
         _saleRepository = saleRepository;
         _tenantRepository = tenantRepository;
+        _transactionManager = transactionManager ?? NoOpTransactionManager.Instance;
     }
 
-    public async Task<SaleResponse> ExecuteAsync(CreateSaleCommand input, CancellationToken cancellationToken = default)
+    public Task<SaleResponse> ExecuteAsync(CreateSaleCommand input, CancellationToken cancellationToken = default)
+        => _transactionManager.ExecuteAsync(ct => ExecuteCoreAsync(input, ct), cancellationToken);
+
+    private async Task<SaleResponse> ExecuteCoreAsync(CreateSaleCommand input, CancellationToken cancellationToken)
     {
         if (input.Items is null || input.Items.Count == 0)
         {
@@ -84,5 +91,13 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
             items.Select(item =>
                 $"{item.ProductId:D}:{item.Quantity.ToString(CultureInfo.InvariantCulture)}"));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
+    }
+
+    private sealed class NoOpTransactionManager : ITransactionManager
+    {
+        public static NoOpTransactionManager Instance { get; } = new();
+
+        public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> operation,
+            CancellationToken cancellationToken = default) => operation(cancellationToken);
     }
 }

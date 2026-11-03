@@ -9,6 +9,7 @@ using Unimag.Inventario.Domain.Purchases.Contracts;
 using Unimag.Inventario.Domain.Purchases.Exceptions;
 using Unimag.Inventario.Domain.Products.Contracts;
 using Unimag.Inventario.Domain.Products.Exceptions;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Application.Purchases.Commands.ChangePurchaseStatus;
 
@@ -18,20 +19,30 @@ public sealed class ChangePurchaseStatusUseCase
     private readonly IPurchaseRepository _purchaseRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryMovementRepository _movementRepository;
+    private readonly ITransactionManager _transactionManager;
 
     public ChangePurchaseStatusUseCase(
         IPurchaseRepository purchaseRepository,
         IProductRepository productRepository,
-        IInventoryMovementRepository movementRepository)
+        IInventoryMovementRepository movementRepository,
+        ITransactionManager? transactionManager = null)
     {
         _purchaseRepository = purchaseRepository;
         _productRepository = productRepository;
         _movementRepository = movementRepository;
+        _transactionManager = transactionManager ?? NoOpTransactionManager.Instance;
     }
 
     public async Task<PurchaseResponse> ExecuteAsync(
         ChangePurchaseStatusCommand input,
         CancellationToken cancellationToken = default)
+    {
+        return await _transactionManager.ExecuteAsync(
+            ct => ExecuteCoreAsync(input, ct), cancellationToken);
+    }
+
+    private async Task<PurchaseResponse> ExecuteCoreAsync(
+        ChangePurchaseStatusCommand input, CancellationToken cancellationToken)
     {
         var purchase = await _purchaseRepository.GetByIdAsync(input.Id, cancellationToken)
             ?? throw new PurchaseNotFoundException(input.Id);
@@ -65,5 +76,13 @@ public sealed class ChangePurchaseStatusUseCase
         await _purchaseRepository.UpdateAsync(purchase, cancellationToken);
         await _purchaseRepository.SaveChangesAsync(cancellationToken);
         return CreatePurchaseUseCase.ToResponse(purchase);
+    }
+
+    private sealed class NoOpTransactionManager : ITransactionManager
+    {
+        public static NoOpTransactionManager Instance { get; } = new();
+
+        public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> operation,
+            CancellationToken cancellationToken = default) => operation(cancellationToken);
     }
 }
