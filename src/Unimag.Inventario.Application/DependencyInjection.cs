@@ -30,6 +30,7 @@ using Unimag.Inventario.Application.Users.Dtos;
 using Unimag.Inventario.Application.Users.Queries.GetUserById;
 using Unimag.Inventario.Application.Platform;
 using Unimag.Inventario.Application.Common.Interfaces;
+using Unimag.Inventario.Application.Common.Dtos;
 using Unimag.Inventario.Application.InventoryMovements.Commands.CreateInventoryMovement;
 using Unimag.Inventario.Application.InventoryMovements.Dtos;
 using Unimag.Inventario.Application.InventoryMovements.Queries.GetInventoryMovementById;
@@ -70,7 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<DeleteProductCommand, bool>, DeleteProductUseCase>();
         services.AddScoped<IUseCase<SetProductImageCommand, ProductResponse>, SetProductImageUseCase>();
         services.AddScoped<IUseCase<GetProductByIdQuery, ProductResponse>, GetProductByIdUseCase>();
-        services.AddScoped<IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>>, ListProductsUseCase>();
+        services.AddScoped<IUseCase<ListProductsQuery, PagedResponse<ProductResponse>>, ListProductsUseCase>();
 
         services.AddScoped<IUseCase<CreateSaleCommand, SaleResponse>, CreateSaleUseCase>();
         services.AddScoped<IUseCase<GetSaleByIdQuery, SaleResponse>, GetSaleByIdUseCase>();

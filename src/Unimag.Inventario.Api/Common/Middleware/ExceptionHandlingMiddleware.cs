@@ -1,6 +1,7 @@
 using Unimag.Inventario.Api.Common.Errors;
 using Unimag.Inventario.Domain.Categories.Exceptions;
 using Unimag.Inventario.Domain.Common;
+using Unimag.Inventario.Domain.Common.Exceptions;
 using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
@@ -85,6 +86,7 @@ public sealed class ExceptionHandlingMiddleware
         SupplierNotFoundException => StatusCodes.Status404NotFound,
         PurchaseNotFoundException => StatusCodes.Status404NotFound,
         IdempotencyKeyPayloadMismatchException => StatusCodes.Status422UnprocessableEntity,
+        InvalidPaginationException => StatusCodes.Status422UnprocessableEntity,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
     };

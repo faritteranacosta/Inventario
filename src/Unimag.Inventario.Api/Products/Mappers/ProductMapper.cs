@@ -24,8 +24,8 @@ public static class ProductMapper
 
     public static GetProductByIdQuery ToGetQuery(Guid id) => new(id);
 
-    public static ListProductsQuery ToListQuery(Guid? categoryId, string? search) =>
-        new(categoryId, search);
+    public static ListProductsQuery ToListQuery(Guid? categoryId, string? search, int page, int pageSize) =>
+        new(categoryId, search, page, pageSize);
 
     public static GetProductByBarcodeQuery ToBarcodeQuery(string barcode) => new(barcode);
 }

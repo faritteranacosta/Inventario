@@ -13,6 +13,7 @@ using Unimag.Inventario.Application.Products.Queries.GetProductById;
 using Unimag.Inventario.Application.Products.Queries.ListProducts;
 using Unimag.Inventario.Application.Products.Queries.ListProductAlerts;
 using Unimag.Inventario.Application.Products.Queries.GetProductByBarcode;
+using Unimag.Inventario.Application.Common.Dtos;
 using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Products;
@@ -27,7 +28,7 @@ public sealed class ProductsController : ControllerBase
     private readonly IUseCase<DeleteProductCommand, bool> _delete;
     private readonly IUseCase<SetProductImageCommand, ProductResponse> _setImage;
     private readonly IUseCase<GetProductByIdQuery, ProductResponse> _getById;
-    private readonly IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> _list;
+    private readonly IUseCase<ListProductsQuery, PagedResponse<ProductResponse>> _list;
     private readonly IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>> _alerts;
     private readonly IUseCase<GetProductByBarcodeQuery, ProductResponse> _getByBarcode;
     private readonly ICurrentTenant _currentTenant;
@@ -39,7 +40,7 @@ public sealed class ProductsController : ControllerBase
         IUseCase<DeleteProductCommand, bool> delete,
         IUseCase<SetProductImageCommand, ProductResponse> setImage,
         IUseCase<GetProductByIdQuery, ProductResponse> getById,
-        IUseCase<ListProductsQuery, IReadOnlyList<ProductResponse>> list,
+        IUseCase<ListProductsQuery, PagedResponse<ProductResponse>> list,
         IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>> alerts,
         IUseCase<GetProductByBarcodeQuery, ProductResponse> getByBarcode,
         ICurrentTenant currentTenant,
@@ -75,9 +76,14 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ProductResponse>>> List([FromQuery] Guid? categoryId, [FromQuery] string? search, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<ProductResponse>>> List(
+        [FromQuery] Guid? categoryId,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _list.ExecuteAsync(ProductMapper.ToListQuery(categoryId, search), cancellationToken);
+        var result = await _list.ExecuteAsync(ProductMapper.ToListQuery(categoryId, search, page, pageSize), cancellationToken);
         return Ok(result);
     }
 
