@@ -61,7 +61,7 @@ public sealed class SalesController : ControllerBase
 
     [HttpGet("summary")]
     public async Task<ActionResult<SalesSummaryResponse>> Summary(
-        [FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] string groupBy = "day",
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] string groupBy = "day",
         CancellationToken cancellationToken = default)
     {
         var result = await _summary.ExecuteAsync(new GetSalesSummaryQuery(from, to, groupBy), cancellationToken);
