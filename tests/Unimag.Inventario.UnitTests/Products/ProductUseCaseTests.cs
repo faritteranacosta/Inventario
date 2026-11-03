@@ -6,6 +6,7 @@ using Unimag.Inventario.Application.Products.Queries.GetProductById;
 using Unimag.Inventario.Application.Products.Queries.ListProducts;
 using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.UnitTests.Fakes;
+using Unimag.Inventario.Domain.Common.Exceptions;
 
 namespace Unimag.Inventario.UnitTests.Products;
 
@@ -119,5 +120,29 @@ public class ProductUseCaseTests
 
         Assert.Single(filtered);
         Assert.Equal("Coca", filtered[0].Name);
+    }
+
+    [Fact]
+    public async Task ListProducts_InvalidPage_Throws()
+    {
+        var useCase = new ListProductsUseCase(new InMemoryProductRepository(_tenant));
+
+        await Assert.ThrowsAsync<InvalidPaginationException>(() =>
+            useCase.ExecuteAsync(new ListProductsQuery(Page: 0), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Products_AreIsolatedByTenant()
+    {
+        var repo = new InMemoryProductRepository(_tenant);
+        await new CreateProductUseCase(repo).ExecuteAsync(
+            new CreateProductCommand(_tenant.TenantId, "Private", null, 1m, 1, CategoryId, null),
+            CancellationToken.None);
+
+        _tenant.TenantId = Guid.NewGuid();
+
+        var products = await repo.GetAllAsync();
+
+        Assert.Empty(products);
     }
 }

@@ -15,6 +15,8 @@ public sealed class Product : BaseEntity
 
     public int Stock { get; private set; }
 
+    public int Version { get; private set; }
+
     public Guid CategoryId { get; private set; }
 
     public string? ImageUrl { get; private set; }
@@ -38,10 +40,12 @@ public sealed class Product : BaseEntity
         Description = description;
         Price = price;
         Stock = stock;
+        Version = 0;
         CategoryId = categoryId;
         ImageUrl = imageUrl;
         MinimumStock = minimumStock;
         Barcode = NormalizeBarcode(barcode);
+        Version++;
         CreatedAtUtc = DateTime.UtcNow;
     }
 
@@ -96,6 +100,7 @@ public sealed class Product : BaseEntity
     public void SetImage(string? imageUrl)
     {
         ImageUrl = imageUrl?.Trim();
+        Version++;
     }
 
     public void DecreaseStock(int quantity)
@@ -111,6 +116,7 @@ public sealed class Product : BaseEntity
         }
 
         Stock -= quantity;
+        Version++;
     }
 
     public void IncreaseStock(int quantity)
@@ -121,6 +127,7 @@ public sealed class Product : BaseEntity
         }
 
         Stock += quantity;
+        Version++;
     }
 
     private static void ValidateMinimumStock(int? minimumStock)

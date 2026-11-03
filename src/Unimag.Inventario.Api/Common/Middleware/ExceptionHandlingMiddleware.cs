@@ -87,6 +87,7 @@ public sealed class ExceptionHandlingMiddleware
         PurchaseNotFoundException => StatusCodes.Status404NotFound,
         IdempotencyKeyPayloadMismatchException => StatusCodes.Status422UnprocessableEntity,
         InvalidPaginationException => StatusCodes.Status422UnprocessableEntity,
+        ConcurrencyConflictException => StatusCodes.Status409Conflict,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
     };
@@ -96,6 +97,7 @@ public sealed class ExceptionHandlingMiddleware
         InsufficientStockException => "INSUFFICIENT_STOCK",
         InventoryStockNegativeException => "INSUFFICIENT_STOCK",
         BarcodeAlreadyExistsException => "BARCODE_ALREADY_EXISTS",
+        ConcurrencyConflictException => "CONCURRENCY_CONFLICT",
         _ when statusCode == StatusCodes.Status400BadRequest => "INVALID_REQUEST",
         _ when statusCode == StatusCodes.Status401Unauthorized => "UNAUTHENTICATED",
         _ when statusCode == StatusCodes.Status403Forbidden => "FORBIDDEN",

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Unimag.Inventario.Domain.Common.Exceptions;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Products;
 using Unimag.Inventario.Domain.Products.Contracts;
@@ -101,6 +102,13 @@ public sealed class ProductRepository : IProductRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyConflictException();
+        }
     }
 }

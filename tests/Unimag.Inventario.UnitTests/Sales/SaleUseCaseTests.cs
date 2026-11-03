@@ -3,8 +3,10 @@ using Unimag.Inventario.Application.Products.Queries.GetProductById;
 using Unimag.Inventario.Application.Sales.Commands.CreateSale;
 using Unimag.Inventario.Application.Sales.Queries.GetSaleById;
 using Unimag.Inventario.Application.Sales.Queries.ListSales;
+using Unimag.Inventario.Application.Reports.Queries.GenerateSalesCsv;
 using Unimag.Inventario.Domain.Products.Exceptions;
 using Unimag.Inventario.Domain.Sales.Exceptions;
+using Unimag.Inventario.Domain.Common.Exceptions;
 using Unimag.Inventario.UnitTests.Fakes;
 
 namespace Unimag.Inventario.UnitTests.Sales;
@@ -102,5 +104,51 @@ public class SaleUseCaseTests
         var all = await list.ExecuteAsync(new ListSalesQuery(now.AddMinutes(-5), now.AddMinutes(5)), CancellationToken.None);
 
         Assert.Single(all);
+    }
+
+    [Fact]
+    public async Task CreateSale_SameIdempotencyKey_ReplaysOriginalSale()
+    {
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
+        var productId = await CreateProductAsync(productRepo, 10, 2.5m);
+        var useCase = new CreateSaleUseCase(productRepo, saleRepo, _tenantRepo);
+        var command = new CreateSaleCommand(_tenant.TenantId, new[] { (productId, 2) }, "sale-1");
+
+        var first = await useCase.ExecuteAsync(command, CancellationToken.None);
+        var replay = await useCase.ExecuteAsync(command, CancellationToken.None);
+
+        Assert.Equal(first.Id, replay.Id);
+        var product = await new GetProductByIdUseCase(productRepo)
+            .ExecuteAsync(new GetProductByIdQuery(productId), CancellationToken.None);
+        Assert.Equal(8, product.Stock);
+    }
+
+    [Fact]
+    public async Task ListSales_InvalidPageSize_Throws()
+    {
+        var useCase = new ListSalesUseCase(new InMemorySaleRepository(_tenant));
+
+        await Assert.ThrowsAsync<InvalidPaginationException>(() =>
+            useCase.ExecuteAsync(new ListSalesQuery(PageSize: 101), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GenerateSalesCsv_EscapesFormulaValues()
+    {
+        var productRepo = new InMemoryProductRepository(_tenant);
+        var saleRepo = new InMemorySaleRepository(_tenant);
+        var product = await new CreateProductUseCase(productRepo).ExecuteAsync(
+            new CreateProductCommand(_tenant.TenantId, "=SUM(A1:A2)", null, 1m, 2, CategoryId, null),
+            CancellationToken.None);
+        await new CreateSaleUseCase(productRepo, saleRepo, _tenantRepo).ExecuteAsync(
+            new CreateSaleCommand(_tenant.TenantId, new[] { (product.Id, 1) }),
+            CancellationToken.None);
+
+        var csv = await new GenerateSalesCsvUseCase(saleRepo)
+            .ExecuteAsync(new GenerateSalesCsvQuery(), CancellationToken.None);
+        var content = System.Text.Encoding.UTF8.GetString(csv);
+
+        Assert.Contains("'=SUM(A1:A2)", content);
     }
 }
