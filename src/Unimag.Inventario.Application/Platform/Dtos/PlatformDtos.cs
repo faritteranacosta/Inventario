@@ -25,6 +25,8 @@ public sealed record UserSessionResponse(
     string Email,
     string PlatformRole,
     Guid? ActiveTenantId,
+    string? ActiveTenantName,
+    string? ActiveTenantLogoUrl,
     IReadOnlyList<MembershipResponse> Memberships);
 
 public sealed record PlatformTenantDetailsResponse(

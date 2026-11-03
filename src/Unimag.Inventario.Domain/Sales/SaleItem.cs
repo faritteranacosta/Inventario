@@ -4,6 +4,8 @@ public sealed class SaleItem
 {
     public Guid ProductId { get; private set; }
 
+    public string ProductName { get; private set; } = string.Empty;
+
     public int Quantity { get; private set; }
 
     public decimal UnitPrice { get; private set; }
@@ -15,7 +17,7 @@ public sealed class SaleItem
         // Required by EF Core materialization.
     }
 
-    public SaleItem(Guid productId, int quantity, decimal unitPrice)
+    public SaleItem(Guid productId, string productName, int quantity, decimal unitPrice)
     {
         if (quantity <= 0)
         {
@@ -28,6 +30,7 @@ public sealed class SaleItem
         }
 
         ProductId = productId;
+        ProductName = (productName ?? string.Empty).Trim();
         Quantity = quantity;
         UnitPrice = unitPrice;
     }

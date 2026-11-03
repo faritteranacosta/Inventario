@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Unimag.Inventario.Api.Tenants.Mappers;
 using Unimag.Inventario.Api.Tenants.Requests;
 using Unimag.Inventario.Application.Common.Interfaces;
 using Unimag.Inventario.Application.Tenants.Commands.CreateTenant;
 using Unimag.Inventario.Application.Tenants.Commands.DeleteTenant;
+using Unimag.Inventario.Application.Tenants.Commands.UpdateTenantBranding;
 using Unimag.Inventario.Application.Tenants.Dtos;
 using Unimag.Inventario.Application.Tenants.Queries.GetTenantById;
 using Unimag.Inventario.Application.Tenants.Queries.ListTenants;
+using Unimag.Inventario.Domain.Common;
 
 namespace Unimag.Inventario.Api.Tenants;
 
@@ -20,14 +23,21 @@ public sealed class TenantsController : ControllerBase
     private readonly IUseCase<DeleteTenantCommand, bool> _delete;
     private readonly IUseCase<GetTenantByIdQuery, TenantResponse> _getById;
     private readonly IUseCase<ListTenantsQuery, IReadOnlyList<TenantResponse>> _list;
+    private readonly IUseCase<UpdateTenantBrandingCommand, TenantResponse> _branding;
+    private readonly ICurrentTenant _currentTenant;
+    private readonly IFileStorage _fileStorage;
 
     public TenantsController(
         IUseCase<CreateTenantCommand, TenantResponse> create,
         IUseCase<DeleteTenantCommand, bool> delete,
         IUseCase<GetTenantByIdQuery, TenantResponse> getById,
-        IUseCase<ListTenantsQuery, IReadOnlyList<TenantResponse>> list)
+        IUseCase<ListTenantsQuery, IReadOnlyList<TenantResponse>> list,
+        IUseCase<UpdateTenantBrandingCommand, TenantResponse> branding,
+        ICurrentTenant currentTenant,
+        IFileStorage fileStorage)
     {
         _create = create; _delete = delete; _getById = getById; _list = list;
+        _branding = branding; _currentTenant = currentTenant; _fileStorage = fileStorage;
     }
 
     [HttpPost]
@@ -51,6 +61,24 @@ public sealed class TenantsController : ControllerBase
     public async Task<ActionResult<TenantResponse>> GetById(Guid id, CancellationToken ct)
     {
         var result = await _getById.ExecuteAsync(new GetTenantByIdQuery(id), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("branding")]
+    public async Task<ActionResult<TenantResponse>> UpdateBranding([FromBody] UpdateTenantBrandingRequest request, CancellationToken ct)
+    {
+        var result = await _branding.ExecuteAsync(new UpdateTenantBrandingCommand(request.DisplayName, request.LogoUrl), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("branding/logo")]
+    public async Task<ActionResult<TenantResponse>> UploadLogo(IFormFile file, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("File is required.");
+        await using var stream = file.OpenReadStream();
+        var url = await _fileStorage.SaveAsync(stream, file.FileName, ct);
+        var result = await _branding.ExecuteAsync(new UpdateTenantBrandingCommand(null, url), ct);
         return Ok(result);
     }
 

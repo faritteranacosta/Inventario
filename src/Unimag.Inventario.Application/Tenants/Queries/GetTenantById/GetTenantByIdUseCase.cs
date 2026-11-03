@@ -13,6 +13,6 @@ public sealed class GetTenantByIdUseCase : IUseCase<GetTenantByIdQuery, TenantRe
     public async Task<TenantResponse> ExecuteAsync(GetTenantByIdQuery input, CancellationToken ct = default)
     {
         var tenant = await _repo.GetByIdAsync(input.Id, ct) ?? throw new TenantNotFoundException(input.Id);
-        return new TenantResponse(tenant.Id, tenant.Name, tenant.CreatedAtUtc);
+        return new TenantResponse(tenant.Id, tenant.Name, tenant.DisplayName, tenant.LogoUrl, tenant.CreatedAtUtc);
     }
 }
