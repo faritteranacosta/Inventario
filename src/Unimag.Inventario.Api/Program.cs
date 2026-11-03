@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Unimag.Inventario.Api.Common.Middleware;
@@ -89,6 +90,15 @@ if (!app.Environment.IsDevelopment() ||
 }
 
     app.UseCors("Frontend");
+
+    // Serve uploaded files (images, logos) from the configured storage path.
+    var uploadsPath = builder.Configuration["Storage:Path"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+    Directory.CreateDirectory(uploadsPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(uploadsPath),
+        RequestPath = "/uploads"
+    });
 
     app.UseAuthentication();
     app.UseAuthorization();
