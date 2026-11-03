@@ -26,7 +26,7 @@ public sealed class ListSalesUseCase : IUseCase<ListSalesQuery, IReadOnlyList<Sa
             sales = await _saleRepository.GetAllAsync(cancellationToken);
         }
 
-        return sales.Select(s => new SaleResponse(s.Id, s.SaleDateUtc,
+        return sales.Select(s => new SaleResponse(s.Id, s.TenantName, s.SaleDateUtc,
             s.Items.Select(i => new SaleItemResponse(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.Total)).ToList(),
             s.Total)).ToList();
     }

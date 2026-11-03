@@ -7,6 +7,8 @@ public sealed class Sale : BaseEntity
 {
     public Guid TenantId { get; private set; }
 
+    public string TenantName { get; private set; } = string.Empty;
+
     public DateTime SaleDateUtc { get; private set; }
 
     private readonly List<SaleItem> _items = new();
@@ -20,15 +22,16 @@ public sealed class Sale : BaseEntity
         // Required by EF Core materialization.
     }
 
-    private Sale(Guid id, Guid tenantId, IEnumerable<SaleItem> items)
+    private Sale(Guid id, Guid tenantId, string tenantName, IEnumerable<SaleItem> items)
     {
         Id = id;
         TenantId = tenantId;
+        TenantName = (tenantName ?? string.Empty).Trim();
         _items.AddRange(items);
         SaleDateUtc = DateTime.UtcNow;
     }
 
-    public static Sale Create(Guid tenantId, IEnumerable<SaleItem> items)
+    public static Sale Create(Guid tenantId, string tenantName, IEnumerable<SaleItem> items)
     {
         var list = items?.ToList() ?? new List<SaleItem>();
         if (list.Count == 0)
@@ -36,6 +39,6 @@ public sealed class Sale : BaseEntity
             throw new EmptySaleException();
         }
 
-        return new Sale(Guid.NewGuid(), tenantId, list);
+        return new Sale(Guid.NewGuid(), tenantId, tenantName, list);
     }
 }
