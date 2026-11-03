@@ -48,6 +48,8 @@ using Unimag.Inventario.Application.Purchases.Commands.ChangePurchaseStatus;
 using Unimag.Inventario.Application.Purchases.Dtos;
 using Unimag.Inventario.Application.Purchases.Queries.GetPurchaseById;
 using Unimag.Inventario.Application.Purchases.Queries.ListPurchases;
+using Unimag.Inventario.Application.Reports.Queries.GenerateSalesCsv;
+using Unimag.Inventario.Application.Reports.Queries.GenerateInventoryCsv;
 
 namespace Unimag.Inventario.Application;
 
@@ -103,6 +105,8 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<ChangePurchaseStatusCommand, PurchaseResponse>, ChangePurchaseStatusUseCase>();
         services.AddScoped<IUseCase<GetPurchaseByIdQuery, PurchaseResponse>, GetPurchaseByIdUseCase>();
         services.AddScoped<IUseCase<ListPurchasesQuery, PagedResponse<PurchaseResponse>>, ListPurchasesUseCase>();
+        services.AddScoped<IUseCase<GenerateSalesCsvQuery, byte[]>, GenerateSalesCsvUseCase>();
+        services.AddScoped<IUseCase<GenerateInventoryCsvQuery, byte[]>, GenerateInventoryCsvUseCase>();
 
         return services;
     }
