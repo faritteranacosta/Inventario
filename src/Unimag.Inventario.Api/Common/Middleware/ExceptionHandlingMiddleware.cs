@@ -2,13 +2,13 @@ using Unimag.Inventario.Api.Common.Errors;
 using Unimag.Inventario.Domain.Categories.Exceptions;
 using Unimag.Inventario.Domain.Common;
 using Unimag.Inventario.Domain.Products.Exceptions;
-using Unimag.Inventario.Domain.Sales.Exceptions;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Tenants.Exceptions;
 using Unimag.Inventario.Domain.Users;
 using Unimag.Inventario.Domain.InventoryMovements.Exceptions;
 using Unimag.Inventario.Domain.Suppliers.Exceptions;
 using Unimag.Inventario.Domain.Purchases.Exceptions;
+using Unimag.Inventario.Domain.Sales.Exceptions;
 
 namespace Unimag.Inventario.Api.Common.Middleware;
 
@@ -84,6 +84,7 @@ public sealed class ExceptionHandlingMiddleware
         InsufficientStockException => StatusCodes.Status409Conflict,
         SupplierNotFoundException => StatusCodes.Status404NotFound,
         PurchaseNotFoundException => StatusCodes.Status404NotFound,
+        IdempotencyKeyPayloadMismatchException => StatusCodes.Status422UnprocessableEntity,
         DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
     };

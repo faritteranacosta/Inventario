@@ -11,6 +11,10 @@ public sealed class Sale : BaseEntity
 
     public DateTime SaleDateUtc { get; private set; }
 
+    public string? IdempotencyKey { get; private set; }
+
+    public string? IdempotencyPayloadHash { get; private set; }
+
     private readonly List<SaleItem> _items = new();
 
     public IReadOnlyList<SaleItem> Items => _items;
@@ -22,16 +26,18 @@ public sealed class Sale : BaseEntity
         // Required by EF Core materialization.
     }
 
-    private Sale(Guid id, Guid tenantId, string tenantName, IEnumerable<SaleItem> items)
+    private Sale(Guid id, Guid tenantId, string tenantName, IEnumerable<SaleItem> items, string? idempotencyKey, string? idempotencyPayloadHash)
     {
         Id = id;
         TenantId = tenantId;
         TenantName = (tenantName ?? string.Empty).Trim();
         _items.AddRange(items);
+        IdempotencyKey = idempotencyKey;
+        IdempotencyPayloadHash = idempotencyPayloadHash;
         SaleDateUtc = DateTime.UtcNow;
     }
 
-    public static Sale Create(Guid tenantId, string tenantName, IEnumerable<SaleItem> items)
+    public static Sale Create(Guid tenantId, string tenantName, IEnumerable<SaleItem> items, string? idempotencyKey = null, string? idempotencyPayloadHash = null)
     {
         var list = items?.ToList() ?? new List<SaleItem>();
         if (list.Count == 0)
@@ -39,6 +45,6 @@ public sealed class Sale : BaseEntity
             throw new EmptySaleException();
         }
 
-        return new Sale(Guid.NewGuid(), tenantId, tenantName, list);
+        return new Sale(Guid.NewGuid(), tenantId, tenantName, list, idempotencyKey, idempotencyPayloadHash);
     }
 }

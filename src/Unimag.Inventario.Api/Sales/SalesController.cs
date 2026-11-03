@@ -40,7 +40,12 @@ public sealed class SalesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SaleResponse>> Create([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
     {
-        var result = await _create.ExecuteAsync(SaleMapper.ToCreateCommand(_currentTenant.TenantId, request), cancellationToken);
+        var result = await _create.ExecuteAsync(
+            SaleMapper.ToCreateCommand(
+                _currentTenant.TenantId,
+                request,
+                Request.Headers["Idempotency-Key"].FirstOrDefault()),
+            cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

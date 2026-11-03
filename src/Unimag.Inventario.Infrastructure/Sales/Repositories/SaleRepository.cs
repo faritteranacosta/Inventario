@@ -24,6 +24,13 @@ public sealed class SaleRepository : ISaleRepository
             .FirstOrDefaultAsync(s => s.Id == id && s.TenantId == _currentTenant.TenantId, cancellationToken);
     }
 
+    public Task<Sale?> GetByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default) =>
+        _dbContext.Sales
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(
+                s => s.TenantId == _currentTenant.TenantId && s.IdempotencyKey == key,
+                cancellationToken);
+
     public async Task<IReadOnlyList<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Sales

@@ -6,6 +6,8 @@ public interface ISaleRepository
 {
     Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<Sale?> GetByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Sale>> GetAllAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Sale>> GetByDateRangeAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);

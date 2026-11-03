@@ -6,6 +6,9 @@ using Unimag.Inventario.Domain.Sales;
 using Unimag.Inventario.Domain.Sales.Contracts;
 using Unimag.Inventario.Domain.Sales.Exceptions;
 using Unimag.Inventario.Domain.Tenants.Contracts;
+using System.Security.Cryptography;
+using System.Text;
+using System.Globalization;
 
 namespace Unimag.Inventario.Application.Sales.Commands.CreateSale;
 
@@ -29,6 +32,24 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
             throw new EmptySaleException();
         }
 
+        var idempotencyKey = string.IsNullOrWhiteSpace(input.IdempotencyKey)
+            ? null
+            : input.IdempotencyKey.Trim();
+        var payloadHash = idempotencyKey is null ? null : ComputePayloadHash(input.Items);
+        if (idempotencyKey is not null)
+        {
+            var existingSale = await _saleRepository.GetByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
+            if (existingSale is not null)
+            {
+                if (!string.Equals(existingSale.IdempotencyPayloadHash, payloadHash, StringComparison.Ordinal))
+                {
+                    throw new IdempotencyKeyPayloadMismatchException(idempotencyKey);
+                }
+
+                return ToResponse(existingSale);
+            }
+        }
+
         var saleItems = new List<SaleItem>();
         foreach (var (productId, quantity) in input.Items)
         {
@@ -43,7 +64,7 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
 
         var tenant = await _tenantRepository.GetByIdAsync(input.TenantId, cancellationToken);
         var tenantName = tenant?.Name ?? string.Empty;
-        var sale = Sale.Create(input.TenantId, tenantName, saleItems);
+        var sale = Sale.Create(input.TenantId, tenantName, saleItems, idempotencyKey, payloadHash);
         await _saleRepository.AddAsync(sale, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
         await _saleRepository.SaveChangesAsync(cancellationToken);
@@ -55,4 +76,13 @@ public sealed class CreateSaleUseCase : IUseCase<CreateSaleCommand, SaleResponse
         new(sale.Id, sale.TenantName, sale.SaleDateUtc,
             sale.Items.Select(i => new SaleItemResponse(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.Total)).ToList(),
             sale.Total);
+
+    private static string ComputePayloadHash(IReadOnlyList<(Guid ProductId, int Quantity)> items)
+    {
+        var payload = string.Join(
+            "|",
+            items.Select(item =>
+                $"{item.ProductId:D}:{item.Quantity.ToString(CultureInfo.InvariantCulture)}"));
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
+    }
 }

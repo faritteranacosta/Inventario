@@ -14,6 +14,10 @@ public sealed class SaleConfiguration : IEntityTypeConfiguration<Sale>
 
         builder.Property(s => s.SaleDateUtc).IsRequired();
 
+        builder.Property(s => s.IdempotencyKey).HasMaxLength(200);
+        builder.Property(s => s.IdempotencyPayloadHash).HasMaxLength(64);
+        builder.HasIndex(s => new { s.TenantId, s.IdempotencyKey }).IsUnique();
+
         builder.OwnsMany(s => s.Items, item =>
         {
             item.Property(i => i.ProductId).IsRequired();

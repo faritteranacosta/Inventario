@@ -17,6 +17,10 @@ public sealed class InMemorySaleRepository : ISaleRepository
     public Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => Task.FromResult(_store.TryGetValue(id, out var s) && s.TenantId == _tenant.TenantId ? s : null);
 
+    public Task<Sale?> GetByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default)
+        => Task.FromResult(_store.Values.FirstOrDefault(s =>
+            s.TenantId == _tenant.TenantId && s.IdempotencyKey == key));
+
     public Task<IReadOnlyList<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Sale>>(_store.Values.Where(s => s.TenantId == _tenant.TenantId).ToList());
 
