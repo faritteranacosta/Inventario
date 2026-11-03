@@ -9,9 +9,11 @@ public sealed class Sale : BaseEntity
 
     public DateTime SaleDateUtc { get; private set; }
 
-    public IReadOnlyList<SaleItem> Items { get; private set; } = Array.Empty<SaleItem>();
+    private readonly List<SaleItem> _items = new();
 
-    public decimal Total => Items.Sum(i => i.Total);
+    public IReadOnlyList<SaleItem> Items => _items;
+
+    public decimal Total => _items.Sum(i => i.Total);
 
     private Sale()
     {
@@ -22,7 +24,7 @@ public sealed class Sale : BaseEntity
     {
         Id = id;
         TenantId = tenantId;
-        Items = items.ToList();
+        _items.AddRange(items);
         SaleDateUtc = DateTime.UtcNow;
     }
 
