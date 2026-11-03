@@ -34,6 +34,26 @@ public sealed class ProductRepository : IProductRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> GetPageAsync(
+        Guid? categoryId, string? search, int skip, int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Products.AsNoTracking()
+            .Where(p => p.TenantId == _currentTenant.TenantId);
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(p => p.Name.Contains(term));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(p => p.CreatedAtUtc).ThenBy(p => p.Id)
+            .Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         var normalized = barcode.Trim();

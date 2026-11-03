@@ -23,6 +23,20 @@ public sealed class InMemoryProductRepository : IProductRepository
     public Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Product>>(_store.Values.Where(p => p.CategoryId == categoryId && p.TenantId == _tenant.TenantId).ToList());
 
+    public Task<(IReadOnlyList<Product> Items, int TotalItems)> GetPageAsync(
+        Guid? categoryId, string? search, int skip, int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _store.Values.Where(p => p.TenantId == _tenant.TenantId);
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => p.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase));
+        var ordered = query.OrderBy(p => p.CreatedAtUtc).ThenBy(p => p.Id).ToList();
+        return Task.FromResult<(IReadOnlyList<Product>, int)>(
+            (ordered.Skip(skip).Take(take).ToList(), ordered.Count));
+    }
+
     public Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
         => Task.FromResult(_store.Values.FirstOrDefault(p =>
             p.TenantId == _tenant.TenantId && p.Barcode == barcode.Trim()));

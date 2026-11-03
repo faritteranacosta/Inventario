@@ -10,6 +10,10 @@ public interface IProductRepository
 
     Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<Product> Items, int TotalItems)> GetPageAsync(
+        Guid? categoryId, string? search, int skip, int take,
+        CancellationToken cancellationToken = default);
+
     Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Product>> GetLowStockAsync(CancellationToken cancellationToken = default);

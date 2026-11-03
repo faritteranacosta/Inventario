@@ -22,28 +22,10 @@ public sealed class ListProductsUseCase : IUseCase<ListProductsQuery, PagedRespo
             throw new InvalidPaginationException();
         }
 
-        IReadOnlyList<Domain.Products.Product> products;
-        if (input.CategoryId.HasValue)
-        {
-            products = await _productRepository.GetByCategoryAsync(input.CategoryId.Value, cancellationToken);
-        }
-        else
-        {
-            products = await _productRepository.GetAllAsync(cancellationToken);
-        }
-
-        if (!string.IsNullOrWhiteSpace(input.Search))
-        {
-            var term = input.Search.Trim().ToLowerInvariant();
-            products = products.Where(p => p.Name.ToLowerInvariant().Contains(term)).ToList();
-        }
-
-        var totalItems = products.Count;
-        var items = products
-            .OrderBy(p => p.CreatedAtUtc)
-            .ThenBy(p => p.Id)
-            .Skip((input.Page - 1) * input.PageSize)
-            .Take(input.PageSize)
+        var result = await _productRepository.GetPageAsync(
+            input.CategoryId, input.Search, (input.Page - 1) * input.PageSize, input.PageSize,
+            cancellationToken);
+        var items = result.Items
             .Select(p => new ProductResponse(p.Id, p.Name, p.Description, p.Price, p.Stock, p.CategoryId, p.ImageUrl, p.MinimumStock, p.Barcode, p.CreatedAtUtc))
             .ToList();
 
@@ -51,7 +33,7 @@ public sealed class ListProductsUseCase : IUseCase<ListProductsQuery, PagedRespo
             items,
             input.Page,
             input.PageSize,
-            totalItems,
-            (int)Math.Ceiling(totalItems / (double)input.PageSize));
+            result.TotalItems,
+            (int)Math.Ceiling(result.TotalItems / (double)input.PageSize));
     }
 }
