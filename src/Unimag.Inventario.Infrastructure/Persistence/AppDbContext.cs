@@ -5,6 +5,7 @@ using Unimag.Inventario.Domain.Sales;
 using Unimag.Inventario.Domain.Tenants;
 using Unimag.Inventario.Domain.Users;
 using Unimag.Inventario.Domain.InventoryMovements;
+using Unimag.Inventario.Domain.Suppliers;
 
 namespace Unimag.Inventario.Infrastructure.Persistence;
 
@@ -34,6 +35,8 @@ public class AppDbContext : DbContext
     public DbSet<PlatformAuditEvent> PlatformAuditEvents => Set<PlatformAuditEvent>();
 
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
+
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

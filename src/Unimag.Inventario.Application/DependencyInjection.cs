@@ -36,6 +36,12 @@ using Unimag.Inventario.Application.InventoryMovements.Queries.GetInventoryMovem
 using Unimag.Inventario.Application.InventoryMovements.Queries.ListInventoryMovements;
 using Unimag.Inventario.Application.Products.Queries.ListProductAlerts;
 using Unimag.Inventario.Application.Products.Queries.GetProductByBarcode;
+using Unimag.Inventario.Application.Suppliers.Commands.CreateSupplier;
+using Unimag.Inventario.Application.Suppliers.Commands.UpdateSupplier;
+using Unimag.Inventario.Application.Suppliers.Commands.DeleteSupplier;
+using Unimag.Inventario.Application.Suppliers.Dtos;
+using Unimag.Inventario.Application.Suppliers.Queries.GetSupplierById;
+using Unimag.Inventario.Application.Suppliers.Queries.ListSuppliers;
 
 namespace Unimag.Inventario.Application;
 
@@ -82,6 +88,11 @@ public static class DependencyInjection
         services.AddScoped<IUseCase<ListInventoryMovementsQuery, IReadOnlyList<InventoryMovementResponse>>, ListInventoryMovementsUseCase>();
         services.AddScoped<IUseCase<ListProductAlertsQuery, IReadOnlyList<ProductAlertResponse>>, ListProductAlertsUseCase>();
         services.AddScoped<IUseCase<GetProductByBarcodeQuery, ProductResponse>, GetProductByBarcodeUseCase>();
+        services.AddScoped<IUseCase<CreateSupplierCommand, SupplierResponse>, CreateSupplierUseCase>();
+        services.AddScoped<IUseCase<UpdateSupplierCommand, SupplierResponse>, UpdateSupplierUseCase>();
+        services.AddScoped<IUseCase<DeleteSupplierCommand, bool>, DeleteSupplierUseCase>();
+        services.AddScoped<IUseCase<GetSupplierByIdQuery, SupplierResponse>, GetSupplierByIdUseCase>();
+        services.AddScoped<IUseCase<ListSuppliersQuery, IReadOnlyList<SupplierResponse>>, ListSuppliersUseCase>();
 
         return services;
     }
